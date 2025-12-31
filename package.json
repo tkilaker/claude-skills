@@ -1,0 +1,32 @@
+{
+  "name": "claude-skills",
+  "version": "1.0.0",
+  "description": "A collection of skills and extensions for Claude Code - Anthropic's official CLI for Claude AI. Includes Apple Notes integration for macOS.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "ai",
+    "ai-assistant",
+    "llm",
+    "large-language-model",
+    "skills",
+    "extensions",
+    "plugins",
+    "macos",
+    "apple-notes",
+    "jxa",
+    "javascript-automation",
+    "automation",
+    "productivity",
+    "ai-tools",
+    "cli",
+    "developer-tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tkilaker/claude-skills.git"
+  },
+  "author": "Tim Kilaker",
+  "license": "MIT"
+}
