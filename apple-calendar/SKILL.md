@@ -5,69 +5,59 @@ description: Manage Apple Calendar events. Triggers on "my calendar", "schedule"
 
 # Apple Calendar Integration
 
-Access Apple Calendar via JXA (JavaScript for Automation).
+Hybrid approach: `icalbuddy` for fast reads, JXA for writes.
 
-## Operations
-
-### List all calendars
-
-```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-app.calendars().map(c => c.name());
-'
-```
+## Read Operations (icalbuddy)
 
 ### List events today
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-const start = new Date(); start.setHours(0,0,0,0);
-const end = new Date(); end.setHours(23,59,59,999);
-const cal = app.calendars.byName("CALENDAR_NAME");
-cal.events.whose({
-    _and: [
-        {startDate: {_greaterThanEquals: start}},
-        {startDate: {_lessThanEquals: end}}
-    ]
-})().map(e => ({
-    summary: e.summary(),
-    start: e.startDate(),
-    end: e.endDate()
-}));
-'
+icalbuddy eventsToday
 ```
 
-### List events in date range
+### List events tomorrow
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-const start = new Date("2024-12-01");
-const end = new Date("2024-12-31");
-const cal = app.calendars.byName("CALENDAR_NAME");
-cal.events.whose({
-    _and: [
-        {startDate: {_greaterThanEquals: start}},
-        {endDate: {_lessThanEquals: end}}
-    ]
-})().map(e => e.summary());
-'
+icalbuddy eventsToday+1
+```
+
+### List events for specific date
+
+```bash
+icalbuddy eventsFrom:"2026-01-15" to:"2026-01-15"
+```
+
+### List events for date range
+
+```bash
+icalbuddy eventsFrom:"2026-01-01" to:"2026-01-31"
+```
+
+### List events from specific calendar
+
+```bash
+icalbuddy -ic "Work" eventsToday
 ```
 
 ### Search events by title
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-const cal = app.calendars.byName("CALENDAR_NAME");
-cal.events.whose({summary: {_contains: "QUERY"}})().map(e => ({
-    summary: e.summary(),
-    start: e.startDate()
-}));
-'
+icalbuddy eventsToday+30 | grep -i "QUERY"
 ```
+
+### List upcoming events (next 7 days)
+
+```bash
+icalbuddy eventsToday+7
+```
+
+### List all calendars
+
+```bash
+icalbuddy calendars
+```
+
+## Write Operations (JXA)
 
 ### Create event
 
@@ -143,12 +133,9 @@ Application("Calendar").reloadCalendars();
 
 ## Important Notes
 
-- Calendar scripting can be slow (known OSA issue)
-- Call `reloadCalendars()` to sync with server before queries
-- `summary` is the event title (not `name`)
-- `description` is the notes field
-- `alldayEvent: true` for all-day events
-- Date queries with `whose` can timeout on large calendars
-- For recurring events, each occurrence is a separate event object
+- **Reads**: Use `icalbuddy` - reads calendar DB directly, fast
+- **Writes**: Use JXA - slower but necessary for create/update/delete
+- `icalbuddy` requires: `brew install ical-buddy`
+- Use `-ic "Name"` to include specific calendar, `-ec "Name"` to exclude
+- JXA `whose` queries are slow on large calendars (avoid for reads)
 - Delete is permanent
-- Use `{_contains: "..."}` for partial title matching
