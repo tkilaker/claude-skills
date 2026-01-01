@@ -5,121 +5,83 @@ description: Manage Apple Reminders. Triggers on "my reminders", "remind me", "a
 
 # Apple Reminders Integration
 
-Access Apple Reminders via JXA (JavaScript for Automation).
+Fast CLI access via [reminders-cli](https://github.com/keith/reminders-cli).
+
+## Prerequisites
+
+```bash
+brew install keith/formulae/reminders-cli
+```
 
 ## Operations
 
 ### List all reminder lists
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-app.lists().map(l => l.name());
-'
+reminders show-lists
 ```
 
-### List reminders in a list
+### Show reminders in a list
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-app.lists.byName("LIST_NAME").reminders().map(r => ({
-    name: r.name(),
-    dueDate: r.dueDate(),
-    completed: r.completed()
-}));
-'
+reminders show "LIST_NAME" --format json
 ```
 
-### List incomplete reminders
+### Show all reminders
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-app.lists.byName("LIST_NAME").reminders.whose({completed: false})().map(r => r.name());
-'
+reminders show-all --format json
+```
+
+### Show overdue reminders
+
+```bash
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+reminders show-all --format json | jq --arg now "$NOW" '[.[] | select(.dueDate) | select(.dueDate < $now)]'
 ```
 
 ### Search reminders by name
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-app.reminders.whose({name: {_contains: "QUERY"}})().map(r => ({
-    name: r.name(),
-    list: r.container().name()
-}));
-'
+reminders show-all --format json | jq '[.[] | select(.title | test("QUERY"; "i"))]'
 ```
 
-### Create reminder (basic)
+### Add reminder (basic)
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-const r = app.Reminder({name: "TITLE", body: "NOTES"});
-app.defaultList.reminders.push(r);
-'
+reminders add "LIST_NAME" "TITLE"
 ```
 
-### Create reminder with due date
+### Add reminder with due date and notes
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-const dueDate = new Date("2024-12-31T10:00:00");
-const r = app.Reminder({name: "TITLE", body: "NOTES", dueDate: dueDate});
-app.lists.byName("LIST_NAME").reminders.push(r);
-'
+reminders add "LIST_NAME" "TITLE" --due-date "tomorrow 9am" --notes "NOTES" --format json
 ```
 
-### Create reminder with remind date
+### Complete reminder
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-const remindDate = new Date("2024-12-31T09:00:00");
-const r = app.Reminder({name: "TITLE", remindMeDate: remindDate});
-app.defaultList.reminders.push(r);
-'
-```
-
-### Mark reminder complete
-
-```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-const r = app.reminders.whose({name: "TITLE"})()[0];
-if (r) r.completed = true;
-'
-```
-
-### Update reminder due date
-
-```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-const r = app.reminders.whose({name: "TITLE"})()[0];
-if (r) r.dueDate = new Date("2024-12-31T15:00:00");
-'
+reminders complete "LIST_NAME" INDEX
 ```
 
 ### Delete reminder
 
 ```bash
-osascript -l JavaScript -e '
-const app = Application("Reminders");
-const r = app.reminders.whose({name: "TITLE"})()[0];
-if (r) app.delete(r);
-'
+reminders delete "LIST_NAME" INDEX
 ```
 
-## Important Notes
+### Edit reminder title
 
-- `dueDate` sets when the reminder is due
-- `remindMeDate` sets when the alert fires (can differ from dueDate)
-- `app.defaultList` is user's default list
-- `app.reminders` searches ALL lists
-- `priority` is integer: 0 = none, 1 = high, 5 = medium, 9 = low
-- Delete is permanent (no trash like Notes)
-- Use `{_contains: "..."}` for partial name matching
+```bash
+reminders edit "LIST_NAME" INDEX "NEW_TITLE"
+```
+
+## Notes
+
+- INDEX is 0-based, shown in `reminders show` output
+- `--due-date` accepts natural language: "tomorrow", "next monday 3pm", "2025-06-15"
+- `--priority` values: none (default), low, medium, high
+- JSON output includes: externalId, isCompleted, list, priority, title, dueDate, startDate
+- dueDate only present if reminder has due date set
+- Delete is permanent (no trash)
+- To delete completed reminders: `uncomplete` first, then `delete`

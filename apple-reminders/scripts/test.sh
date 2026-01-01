@@ -3,41 +3,56 @@
 
 echo "=== Apple Reminders Skill Test ==="
 
+# Get first list
+LIST=$(reminders show-lists | head -1)
+echo "Using list: $LIST"
+
 # Create
 echo "1. Creating test reminder..."
-osascript -l JavaScript -e 'const app = Application("Reminders"); const r = app.Reminder({name: "__SKILL_TEST__", body: "Test notes"}); app.defaultList.reminders.push(r);'
-sleep 1
+reminders add "$LIST" "__SKILL_TEST__" --notes "Test notes" >/dev/null
 
 # Read
 echo "2. Reading..."
-NAME=$(osascript -l JavaScript -e 'const app = Application("Reminders"); const r = app.reminders.whose({name: "__SKILL_TEST__"})(); r.length > 0 ? r[0].name() : "FAIL"')
-if [ "$NAME" = "__SKILL_TEST__" ]; then
+FOUND=$(reminders show "$LIST" --format json | jq -r '.[] | select(.title == "__SKILL_TEST__") | .title')
+if [ "$FOUND" = "__SKILL_TEST__" ]; then
     echo "   PASS: Found reminder"
 else
     echo "   FAIL: Could not read reminder"
+    exit 1
 fi
 
-# Update (mark complete)
-echo "3. Marking complete..."
-osascript -l JavaScript -e 'const app = Application("Reminders"); const r = app.reminders.whose({name: "__SKILL_TEST__"})()[0]; if (r) r.completed = true;'
+# Get index
+INDEX=$(reminders show "$LIST" | grep -n "__SKILL_TEST__" | head -1 | cut -d: -f1)
+INDEX=$((INDEX - 1))
 
-# Verify update
+# Complete
+echo "3. Marking complete..."
+reminders complete "$LIST" "$INDEX" >/dev/null
+
+# Verify completion
 echo "4. Verifying completion..."
-COMPLETED=$(osascript -l JavaScript -e 'const app = Application("Reminders"); const r = app.reminders.whose({name: "__SKILL_TEST__"})()[0]; r ? r.completed() : "FAIL"')
+COMPLETED=$(reminders show "$LIST" --include-completed --format json | jq -r '.[] | select(.title == "__SKILL_TEST__") | .isCompleted')
 if [ "$COMPLETED" = "true" ]; then
     echo "   PASS: Marked complete"
 else
     echo "   FAIL: Not marked complete"
 fi
 
+# Uncomplete first (required to delete)
+echo "5. Uncompleting before delete..."
+CINDEX=$(reminders show "$LIST" --only-completed | grep "__SKILL_TEST__" | cut -d: -f1)
+reminders uncomplete "$LIST" "$CINDEX" >/dev/null 2>&1
+
+# Get index from default view
+INDEX=$(reminders show "$LIST" | grep "__SKILL_TEST__" | cut -d: -f1)
+
 # Delete
-echo "5. Deleting..."
-osascript -l JavaScript -e 'const app = Application("Reminders"); const r = app.reminders.whose({name: "__SKILL_TEST__"})()[0]; if (r) app.delete(r);'
-sleep 1
+echo "6. Deleting..."
+reminders delete "$LIST" "$INDEX" >/dev/null
 
 # Verify deletion
-echo "6. Verifying deletion..."
-COUNT=$(osascript -l JavaScript -e 'const app = Application("Reminders"); app.reminders.whose({name: "__SKILL_TEST__"})().length')
+echo "7. Verifying deletion..."
+COUNT=$(reminders show "$LIST" --include-completed --format json | jq '[.[] | select(.title == "__SKILL_TEST__")] | length')
 if [ "$COUNT" = "0" ]; then
     echo "   PASS: Reminder deleted"
 else
