@@ -41,12 +41,16 @@ notes.length > 0 ? notes[0].body() : "Not found";
 
 ### Create note
 
+Do NOT include the title in body - Apple Notes auto-adds it as the first `<div>`.
+
 ```bash
 osascript -l JavaScript -e '
 const app = Application("Notes");
 app.make({new: "note", withProperties: {name: "TITLE", body: "<div>CONTENT</div>"}});
 '
 ```
+
+Wrong (causes duplication): `body: "<div>TITLE</div><div>CONTENT</div>"`
 
 ### Update note
 
@@ -77,7 +81,9 @@ if (notes.length > 0) { app.delete(notes[0]); }
 ## Important Notes
 
 - Content is HTML (Apple Notes native format)
-- Title appears as first `<div>` in body - preserve when updating
+- Apple Notes auto-adds `name` as first `<div>` in body on create
+- When creating: do NOT include title in body (causes duplication)
+- When updating: MUST include title as first `<div>` (it's already there)
 - Use `{_contains: "..."}` for partial title matching
 - `app.notes` searches ALL folders including Recently Deleted
 - Delete moves to trash, doesn't permanently delete

@@ -3,6 +3,26 @@
 
 echo "=== Apple Notes Skill Test ==="
 
+# Test: title should appear exactly once when created correctly (no title in body)
+echo "0. Testing title appears exactly once..."
+osascript -l JavaScript -e 'Application("Notes").make({new: "note", withProperties: {name: "__DUPE_TEST__", body: "<div>Content only</div>"}})'
+sleep 1
+DUPE_CHECK=$(osascript -l JavaScript -e '
+const app = Application("Notes");
+const n = app.notes.whose({name: "__DUPE_TEST__"})();
+if (n.length > 0) {
+    const body = n[0].body();
+    // Title should appear exactly once (auto-added by Apple Notes)
+    const matches = body.match(/<div>__DUPE_TEST__<\/div>/g);
+    const count = matches ? matches.length : 0;
+    count === 1 ? "PASS" : "FAIL (title appears " + count + " times, expected 1)";
+} else { "FAIL (note not found)"; }
+')
+echo "   Title count test: $DUPE_CHECK"
+# Cleanup
+osascript -l JavaScript -e 'var app = Application("Notes"); var notes = app.notes.whose({name: "__DUPE_TEST__"})(); if (notes.length > 0) { app.delete(notes[0]); }'
+sleep 1
+
 # Create
 echo "1. Creating test note..."
 osascript -l JavaScript -e 'Application("Notes").make({new: "note", withProperties: {name: "__SKILL_TEST__", body: "<div>Test</div>"}})'
