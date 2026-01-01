@@ -139,3 +139,4 @@ Application("Calendar").reloadCalendars();
 - Use `-ic "Name"` to include specific calendar, `-ec "Name"` to exclude
 - JXA `whose` queries are slow on large calendars (avoid for reads)
 - Delete is permanent
+- **Language**: Before creating/updating events, check existing entries to detect the user's language. Write new events in the same language.
