@@ -109,3 +109,4 @@ if (notes.length > 0) { app.delete(notes[0]); }
 - Delete moves to trash, doesn't permanently delete
 - To exclude trash: search in specific folder (see List example)
 - Use `notes list` for content search (17x faster than JXA)
+- String replacement is fragile - Apple Notes reformats HTML silently. For updates, rewrite the entire note body instead of find-replace.

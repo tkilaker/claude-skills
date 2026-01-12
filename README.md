@@ -28,6 +28,12 @@ Read Apple Mail via JXA (read-only).
 
 Read/write system clipboard via `pbcopy`/`pbpaste`. No dependencies.
 
+### Code Review
+
+#### [commit-review](./commit-review/SKILL.md)
+
+Multi-agent code review for commits. Runs 5 parallel Sonnet agents (CLAUDE.md compliance, bugs, git history, previous feedback, code comments), scores issues, filters false positives. Works on single commits or ranges.
+
 ### External Services
 
 #### [azure-devops](./azure-devops/SKILL.md)
@@ -40,7 +46,7 @@ Symlink skills to `~/.claude/skills/`:
 
 ```bash
 mkdir -p ~/.claude/skills
-for skill in apple-notes apple-reminders apple-calendar apple-mail clipboard azure-devops; do
+for skill in apple-notes apple-reminders apple-calendar apple-mail clipboard azure-devops commit-review; do
   ln -s /path/to/claude-skills/$skill ~/.claude/skills/
 done
 ```
