@@ -1,7 +1,7 @@
 ---
 name: changelog
 description: Generate Teams-friendly release notes from git commits for App test group.
-argument-hint: "[tag]"
+argument-hint: "[frontend-tag] [api:commit]"
 allowed-tools:
   - Bash
   - Read
@@ -11,40 +11,43 @@ allowed-tools:
 
 Generate release notes for the App test group in Microsoft Teams.
 
+## Usage
+
+```
+/changelog                      # Latest frontend tag only
+/changelog v3.0.51              # Specific frontend tag only
+/changelog api:abc123           # Backend only (from commit to HEAD)
+/changelog v3.0.51 api:abc123   # Both frontend tag and backend commit
+```
+
 ## Instructions
 
-1. **Determine the tag range:**
-   - If a tag argument is provided (e.g., `/changelog v3.1.0`), use that tag
-   - Otherwise, get the latest tag on HEAD (not by version number):
-     ```bash
-     cd /path/to/frontend-app && git describe --tags --abbrev=0 HEAD
-     ```
-   - Find the previous tag (the tag before the target tag):
-     ```bash
-     git describe --tags --abbrev=0 <target-tag>^
-     ```
+1. **Parse arguments:**
+   - Frontend tag: bare argument like `v3.0.51` (optional)
+   - Backend commit: prefixed with `api:` like `api:abc123` (optional)
+   - If no frontend tag specified, use latest tag on HEAD
 
-2. **Gather commits from both repos:**
-
-   **Frontend** (`/path/to/frontend-app`):
+2. **Get frontend commits (if frontend tag provided or defaulted):**
    ```bash
-   cd /path/to/frontend-app && git log <previous-tag>..<target-tag> --format="%s" --no-merges
+   cd /path/to/frontend-app && git describe --tags --abbrev=0 HEAD
+   # Find previous tag
+   git describe --tags --abbrev=0 <target-tag>^
+   # Get commits between tags
+   git log <previous-tag>..<target-tag> --format="%s" --no-merges
    ```
 
-   **Backend** (`/path/to/backend-api`):
-   - Get the date of the target frontend tag
-   - Get the date of the previous frontend tag
-   - Get backend commits between those dates:
+3. **Get backend commits (if api: argument provided):**
    ```bash
-   cd /path/to/backend-api && git log --since="<previous-tag-date>" --until="<target-tag-date>" --format="%s" --no-merges
+   cd /path/to/backend-api && git log <commit>..HEAD --format="%s" --no-merges
    ```
+   - The commit is the "last deployed" commit - changes FROM there TO HEAD are included
 
-3. **Filter commits:**
+4. **Filter commits:**
    - Include: `feat:`, `fix:` (user-visible changes)
    - Exclude: `refactor:`, `chore:`, `test:`, `docs:`, `perf:`, `ci:`, `style:`, `revert:`
    - Exception: Include `perf:` only if it's user-noticeable (e.g., "faster search")
 
-4. **Rewrite for testers:**
+5. **Rewrite for testers:**
    Transform developer language into user-facing descriptions:
    - "feat: add manufacturer and forecast to Where Used" → "Manufacturer and sales forecast columns in Where Used"
    - "fix: widen Z-BOM description column" → "Wider Z-BOM description column"
@@ -52,26 +55,47 @@ Generate release notes for the App test group in Microsoft Teams.
    - Focus on what users SEE, not how it's implemented
    - Use active voice, present tense
 
-5. **Group backend changes:**
+6. **Group backend changes:**
    - Only include backend changes that enable visible frontend features
    - Group them under "BACKEND" section with brief explanation
    - Skip pure backend refactors, internal fixes, test changes
 
-6. **Output format (Teams plain text):**
+7. **Output format (Teams plain text):**
 
+If frontend only:
 ```
 App <tag> - <date>
 
 NEW
 - <feature description>
+
+FIXED
+- <fix description>
+```
+
+If backend only:
+```
+App API - <date>
+
+NEW
 - <feature description>
 
 FIXED
 - <fix description>
+```
+
+If both:
+```
+App <tag> - <date>
+
+NEW
+- <feature description>
+
+FIXED
 - <fix description>
 
 BACKEND
-- <backend change> (enables <frontend feature>)
+- <backend change>
 ```
 
 ## Rules
