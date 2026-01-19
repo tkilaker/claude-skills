@@ -84,23 +84,28 @@ curl -s -H "Authorization: Bearer $TOKEN" "$BASE"
 # Bio/presentation
 curl -s -H "Authorization: Bearer $TOKEN" "$BASE/presentation"
 
-# Update bio
+# Update bio (requires saveTo field and profileTranslationId)
+# Get profileTranslationId from GET presentation response first
 curl -s -X PUT -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"description": "New bio text"}' \
+  -d '{
+    "saveTo": "profile",
+    "profileTranslationId": <from_GET_response>,
+    "title": "Senior Software Consultant",
+    "description": "New bio text",
+    "personalDescription": "Personal section text"
+  }' \
   "$BASE/presentation"
 
-# Skills
-curl -s -H "Authorization: Bearer $TOKEN" "$BASE/skills"
+# Skills (accessed via full profile, not separate endpoint)
+# The /skills endpoint returns 405 - use full profile instead:
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE" | jq '.skills'
 
-# Add skill
-curl -s -X POST -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Rust", "level": 4}' \
-  "$BASE/skills"
+# Work experiences (also available in full profile as .workExperience)
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE" | jq '.workExperience'
 
-# Work experiences
-curl -s -H "Authorization: Bearer $TOKEN" "$BASE/workexperiences"
+# Employers
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE" | jq '.employers'
 ```
 
 ## Implementation
