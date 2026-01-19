@@ -97,9 +97,22 @@ curl -s -X PUT -H "Authorization: Bearer $TOKEN" \
   }' \
   "$BASE/presentation"
 
-# Skills (accessed via full profile, not separate endpoint)
-# The /skills endpoint returns 405 - use full profile instead:
-curl -s -H "Authorization: Bearer $TOKEN" "$BASE" | jq '.skills'
+# Skills (read via full profile)
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE" | jq '.skills[] | {id, name: .keyword.masterSynonym, level}'
+
+# Add skill (requires saveTo field)
+curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "saveTo": "profile",
+    "name": "TypeScript",
+    "level": 3
+  }' \
+  "$BASE/skills"
+
+# Remove skill (use skill id from profile)
+curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
+  "$BASE/skills/<skill_id>"
 
 # Work experiences (also available in full profile as .workExperience)
 curl -s -H "Authorization: Bearer $TOKEN" "$BASE" | jq '.workExperience'
