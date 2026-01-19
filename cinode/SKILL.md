@@ -91,7 +91,7 @@ curl -s -X PUT -H "Authorization: Bearer $TOKEN" \
   -d '{
     "saveTo": "profile",
     "profileTranslationId": <from_GET_response>,
-    "title": "Senior Software Consultant",
+    "title": "Your Title",
     "description": "New bio text",
     "personalDescription": "Personal section text"
   }' \
@@ -143,7 +143,7 @@ Keep output concise and scannable:
 John Doe
 Senior Software Engineer
 
-Bio: Unix philosophy advocate...
+Bio: Experienced developer...
 Skills: 12 | Experience: 5 positions
 
 Run /cinode bio|skills|work for details
