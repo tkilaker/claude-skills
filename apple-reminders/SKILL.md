@@ -76,6 +76,10 @@ reminders delete "LIST_NAME" INDEX
 reminders edit "LIST_NAME" INDEX "NEW_TITLE"
 ```
 
+## Default list
+
+Always use **"Life Hub 🎯"** unless the user explicitly specifies another list. This is the global inbox for all tasks.
+
 ## Notes
 
 - INDEX is 0-based, shown in `reminders show` output
