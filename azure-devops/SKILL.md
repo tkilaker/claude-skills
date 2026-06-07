@@ -1,15 +1,23 @@
 ---
 name: azure-devops
-description: Fetch Azure DevOps work items by ID. Triggers on "work item", "ADO", "azure devops", "PBI", "bug #", "task #".
+description: Read Azure DevOps work items by ID or URL, including fields, acceptance criteria, comments, relations, and downloaded images/attachments. Use when the user mentions Azure DevOps, ADO, work item, PBI, bug, task, feature, user story, or asks about an issue/ticket such as "#12345".
 ---
 
 # Azure DevOps Work Items
 
-**IMPORTANT: Always fetch the COMPLETE work item - fields, comments, AND images. Run ALL commands below.**
+Always fetch the complete work item before answering: fields, comments, relations, and images/attachments. Do not infer ticket contents from the ID or title alone.
 
-## Prerequisites
+## Quick Start
 
-Config file at `~/.config/azure-devops/config.json`:
+Use the bundled fetcher:
+
+```bash
+python3 ~/.agents/skills/azure-devops/scripts/fetch_work_item.py 12345
+```
+
+It reads `~/.config/azure-devops/config.json`, writes raw API responses and downloaded attachments under `/tmp/ado-workitems/<id>/`, and prints a markdown summary. It uses only the Python standard library.
+
+Expected config:
 
 ```json
 {
@@ -19,59 +27,31 @@ Config file at `~/.config/azure-devops/config.json`:
 }
 ```
 
-## Complete Fetch (run ALL of these)
+PAT scope: Work Items (Read).
 
-**1. Fetch work item + comments + images:**
-```bash
-ID=12345 && CONFIG=~/.config/azure-devops/config.json && PAT=$(jq -r .pat "$CONFIG") && ORG=$(jq -r .organization "$CONFIG") && PROJECT=$(jq -r .project "$CONFIG" | sed 's/ /%20/g') && curl -s -u ":$PAT" "https://dev.azure.com/$ORG/$PROJECT/_apis/wit/workitems/$ID?api-version=7.0&\$expand=All" > /tmp/wi${ID}.json && curl -s -u ":$PAT" "https://dev.azure.com/$ORG/$PROJECT/_apis/wit/workitems/$ID/comments?api-version=7.0-preview" > /tmp/wi${ID}_comments.json && IMG_DIR=/tmp/ado-images/workitem_$ID && mkdir -p "$IMG_DIR" && i=1 && for url in $(jq -r '.fields["System.Description"] // ""' /tmp/wi${ID}.json | grep -oE 'https://dev\.azure\.com[^"]+attachments/[^"]+' || true); do guid=$(echo "$url" | grep -oE 'attachments/[a-f0-9-]+' | cut -d/ -f2); curl -s -u ":$PAT" "$url" -o "$IMG_DIR/image_${i}_${guid:0:8}.png"; i=$((i+1)); done && echo "Fetched work item $ID"
-```
+## Workflow
 
-**2. Display work item fields:**
-```bash
-ID=12345 && jq '{id: .id, type: .fields["System.WorkItemType"], title: .fields["System.Title"], state: .fields["System.State"], assignedTo: .fields["System.AssignedTo"].displayName, description: .fields["System.Description"], acceptanceCriteria: .fields["Microsoft.VSTS.Common.AcceptanceCriteria"], priority: .fields["Microsoft.VSTS.Common.Priority"], tags: .fields["System.Tags"], areaPath: .fields["System.AreaPath"], iterationPath: .fields["System.IterationPath"]}' /tmp/wi${ID}.json
-```
+1. Extract the work item ID from the user's text. Accept plain IDs, `#12345`, PBI/bug/task references, or Azure DevOps URLs.
+2. Run `scripts/fetch_work_item.py <id-or-url>`.
+3. Read the printed markdown. If images were downloaded, inspect relevant local files with image tools before making visual claims.
+4. Answer with the ticket facts the user needs. Include important state, title, description, acceptance criteria, comments, blockers, and image paths when relevant.
 
-**3. Display comments:**
-```bash
-ID=12345 && jq '.comments[] | {author: .createdBy.displayName, date: .createdDate, text: .text}' /tmp/wi${ID}_comments.json
-```
+For multiple IDs, run the script once per ID.
 
-**4. List downloaded images:**
-```bash
-ID=12345 && ls -la /tmp/ado-images/workitem_$ID 2>/dev/null || echo "No images"
-```
+## Output Files
 
-Then use the Read tool on any downloaded images to view them.
+For ID `12345`, the script writes:
 
-## Output format (markdown)
+- `/tmp/ado-workitems/12345/workitem.json`
+- `/tmp/ado-workitems/12345/comments.json`
+- `/tmp/ado-workitems/12345/summary.md`
+- `/tmp/ado-workitems/12345/attachments/*`
 
-```markdown
-# [Type] #ID: Title
-
-**State:** X | **Assigned:** Y | **Priority:** Z
-
-## Description
-[Plain text, strip HTML]
-
-## Acceptance Criteria
-[Plain text, strip HTML]
-
-## Images
-[Local paths to downloaded images]
-
-## Comments
-### Author - Date
-[Comment text]
-
----
-Tags: a, b, c
-Area: X | Iteration: Y
-```
+Use `summary.md` for compact context and raw JSON only when you need exact field names or relation details.
 
 ## Notes
 
-- PAT needs "Work Items (Read)" scope
-- URL-encode project name if it has spaces (`sed 's/ /%20/g'`)
-- Save API responses to files to avoid shell escaping issues with JSON
-- HTML in description/AC: strip tags, decode entities
-- For clipboard: pipe final markdown to `pbcopy`
+- Never print or expose the PAT.
+- HTML in Azure DevOps fields and comments is converted to plain text in the markdown summary.
+- The script downloads relation attachments and embedded image URLs found in description, acceptance criteria, reproduction steps, system info, and comments.
+- If the script reports an auth or config error, surface the exact missing prerequisite without guessing.

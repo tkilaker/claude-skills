@@ -1,0 +1,41 @@
+---
+papersize: a4
+fontsize: 11pt
+lang: en
+mainfont: "Helvetica Neue"
+mainfontoptions:
+  - Ligatures=TeX
+sansfont: "Helvetica Neue"
+sansfontoptions:
+  - Ligatures=TeX
+monofont: "Menlo"
+monofontoptions:
+  - Scale=0.88
+titlepage: true
+titlepage-color: "FFFFFF"
+titlepage-text-color: "2A2A2A"
+titlepage-rule-color: "1F8F57"
+titlepage-rule-height: 1
+toc-own-page: true
+colorlinks: true
+linkcolor: tim-link-green
+urlcolor: tim-link-green
+toccolor: tim-toc-charcoal
+header-includes:
+  - '\definecolor{tim-link-green}{HTML}{146C43}'
+  - '\definecolor{tim-toc-charcoal}{HTML}{2A2A2A}'
+  - '\definecolor{tim-body-charcoal}{HTML}{2A2A2A}'
+  - '\AtBeginDocument{\color{tim-body-charcoal}}'
+caption-justification: raggedright
+table-use-row-colors: true
+code-block-font-size: '\footnotesize'
+listings-disable-line-numbers: true
+geometry:
+  - top=24mm
+  - bottom=26mm
+  - left=24mm
+  - right=24mm
+  - includehead=true
+  - includefoot=true
+linestretch: 1.12
+...

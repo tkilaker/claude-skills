@@ -1,0 +1,4 @@
+interface:
+  display_name: "Azure DevOps"
+  short_description: "Read Azure DevOps work items with comments and images"
+  default_prompt: "Fetch this Azure DevOps work item and summarize its fields, acceptance criteria, comments, and images."

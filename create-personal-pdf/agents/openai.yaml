@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Personal PDF"
+  short_description: "Build styled Pandoc PDFs consistently"
+  default_prompt: "Use $create-personal-pdf to turn this Markdown into a polished PDF."

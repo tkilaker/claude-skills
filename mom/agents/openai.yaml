@@ -1,0 +1,4 @@
+interface:
+  display_name: "MOM"
+  short_description: "Create clean minutes from meeting transcripts"
+  default_prompt: "Use $mom to turn this meeting transcript into a standardized minutes file."
