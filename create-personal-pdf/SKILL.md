@@ -16,7 +16,7 @@ python3 ~/.agents/skills/create-personal-pdf/scripts/build_pdf.py input.md
 ```
 
 Prefer Markdown as the source. If the user provides prose, create a temporary
-Markdown file in the relevant project or `~/brain/scratch/`, then render it.
+Markdown file in the relevant project or `~/dev/brain/scratch/`, then render it.
 
 ## Document Defaults
 

@@ -1,6 +1,6 @@
 ---
 name: brain
-description: Access Tim's personal knowledge base at ~/brain/. Use when asked about Tim's preferences, systems, setup, past learnings, or when asked to remember something. Triggers on "remember this", "my setup", "my preferences", "my taste", "my profile", "based on my", "use my", "apply my", "what do I use", "what did we learn", "recommend for me".
+description: Access Tim's personal knowledge base at ~/dev/brain/. Use when asked about Tim's preferences, systems, setup, past learnings, or when asked to remember something. Triggers on "remember this", "my setup", "my preferences", "my taste", "my profile", "based on my", "use my", "apply my", "what do I use", "what did we learn", "recommend for me".
 ---
 
 # Tim's Brain - Personal Knowledge Base
@@ -8,7 +8,7 @@ description: Access Tim's personal knowledge base at ~/brain/. Use when asked ab
 ## Structure
 
 ```
-~/brain/
+~/dev/brain/
 ├── CLAUDE.md        # Entry point - quick reference
 ├── profile.md       # Taste, philosophy, preferences
 ├── systems.md       # Hardware, software, network setup
@@ -35,18 +35,18 @@ description: Access Tim's personal knowledge base at ~/brain/. Use when asked ab
 ### Looking Up Information
 
 1. Read the relevant file directly:
-   - Preferences/taste → `~/brain/profile.md`
-   - Computer/NAS/network → `~/brain/systems.md`
-   - Past discoveries → `~/brain/learnings.md`
-   - Project context → `~/brain/projects/<name>/`
+   - Preferences/taste → `~/dev/brain/profile.md`
+   - Computer/NAS/network → `~/dev/brain/systems.md`
+   - Past discoveries → `~/dev/brain/learnings.md`
+   - Project context → `~/dev/brain/projects/<name>/`
 
-2. For quick context, `~/brain/CLAUDE.md` has the summary.
+2. For quick context, `~/dev/brain/CLAUDE.md` has the summary.
 
 ### Adding New Learnings
 
 When Tim says "remember this" or you discover something worth keeping:
 
-1. Read `~/brain/learnings.md`
+1. Read `~/dev/brain/learnings.md`
 2. Find or create the appropriate **topic section** (## heading):
    - Use broad categories: macOS, Hardware, Networking, Dev, Claude, Shell, etc.
    - Check existing sections first — don't create duplicates
@@ -60,7 +60,7 @@ When Tim says "remember this" or you discover something worth keeping:
    - Key point one
    - Key point two
    ```
-6. Commit: `cd ~/brain && git add learnings.md && git commit -m "Learn: topic"`
+6. Commit: `cd ~/dev/brain && git add learnings.md && git commit -m "Learn: topic"`
 
 **Proactive capture triggers** — consider logging a learning when:
 - A non-obvious workaround is found
@@ -70,7 +70,7 @@ When Tim says "remember this" or you discover something worth keeping:
 
 ### Working with Projects
 
-Projects live in `~/brain/projects/`. Use `projects/TEMPLATE.md` as a scaffold for new ones.
+Projects live in `~/dev/brain/projects/`. Use `projects/TEMPLATE.md` as a scaffold for new ones.
 
 Each project should have:
 - **Status** (planning/active/paused/done)
@@ -81,9 +81,9 @@ Each project should have:
 
 When Tim's setup changes (new software, config, hardware):
 
-1. Read `~/brain/systems.md`
+1. Read `~/dev/brain/systems.md`
 2. Update the relevant section
-3. Commit: `cd ~/brain && git add systems.md && git commit -m "Update: section name"`
+3. Commit: `cd ~/dev/brain && git add systems.md && git commit -m "Update: section name"`
 
 ## Formatting Conventions
 
