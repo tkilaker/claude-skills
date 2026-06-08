@@ -13,7 +13,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 
-CONFIG_PATH = Path.home() / '.config' / 'azure-devops' / 'config.json'
+CONFIG_DIR = Path.home() / '.config' / 'azure-devops'
+CONFIG_PATH = CONFIG_DIR / 'config.json'
 OUT_ROOT = Path('/tmp/ado-workitems')
 API_VERSION = '7.0'
 COMMENTS_API_VERSION = '7.0-preview'
@@ -83,15 +84,126 @@ def die(message):
     sys.exit(1)
 
 
-def load_config():
-    if not CONFIG_PATH.exists():
-        die(f'missing config: {CONFIG_PATH}')
-    with CONFIG_PATH.open() as handle:
+def read_config(path):
+    with path.open() as handle:
         config = json.load(handle)
     missing = [key for key in ('pat', 'organization', 'project') if not config.get(key)]
     if missing:
-        die(f'missing config key(s): {", ".join(missing)}')
+        die(f'missing config key(s) in {path}: {", ".join(missing)}')
+    config['_path'] = str(path)
     return config
+
+
+def load_default_config():
+    if not CONFIG_PATH.exists():
+        die(f'missing config: {CONFIG_PATH}')
+    return read_config(CONFIG_PATH)
+
+
+def load_config_by_name(value):
+    path = Path(value).expanduser()
+    if not path.exists():
+        candidate = CONFIG_DIR / value
+        if candidate.suffix != '.json':
+            candidate = candidate.with_suffix('.json')
+        path = candidate
+    if not path.exists():
+        die(f'missing config: {path}')
+    return read_config(path)
+
+
+def load_all_configs():
+    configs = []
+    if CONFIG_PATH.exists():
+        configs.append(read_config(CONFIG_PATH))
+
+    for path in sorted(CONFIG_DIR.glob('*.json')):
+        if path == CONFIG_PATH:
+            continue
+        try:
+            configs.append(read_config(path))
+        except json.JSONDecodeError as error:
+            print(f'warning: skipping invalid config {path}: {error}', file=sys.stderr)
+
+    if not configs:
+        die(f'missing config: {CONFIG_PATH}')
+    return configs
+
+
+def normalize_org(value):
+    value = str(value or '').strip().rstrip('/')
+    if not value:
+        return ''
+    parsed = urllib.parse.urlparse(value)
+    if parsed.scheme and parsed.netloc:
+        if parsed.netloc.lower() == 'dev.azure.com':
+            parts = [urllib.parse.unquote(part) for part in parsed.path.split('/') if part]
+            return parts[0].lower() if parts else ''
+        if parsed.netloc.lower().endswith('.visualstudio.com'):
+            return parsed.netloc.split('.')[0].lower()
+    return value.split('/')[-1].lower()
+
+
+def normalize_project(value):
+    return urllib.parse.unquote(str(value or '').strip()).lower()
+
+
+def parse_url_context(value):
+    parsed = urllib.parse.urlparse(value.strip())
+    if not (parsed.scheme and parsed.netloc):
+        return {}
+
+    parts = [urllib.parse.unquote(part) for part in parsed.path.split('/') if part]
+    host = parsed.netloc.lower()
+    if host == 'dev.azure.com' and parts:
+        project = parts[1] if len(parts) > 1 and not parts[1].startswith('_') else None
+        return {'organization': parts[0], 'project': project}
+    if host.endswith('.visualstudio.com'):
+        project = parts[0] if parts and not parts[0].startswith('_') else None
+        return {'organization': host.split('.')[0], 'project': project}
+    return {}
+
+
+def select_config(work_item, config_name=None, organization=None, project=None):
+    if config_name:
+        config = load_config_by_name(config_name)
+    elif organization or project:
+        config = None
+    else:
+        target = parse_url_context(work_item)
+        if not target:
+            return load_default_config()
+        organization = target.get('organization')
+        project = target.get('project')
+        config = None
+
+    if config_name:
+        return config
+
+    configs = load_all_configs()
+    org_key = normalize_org(organization)
+    project_key = normalize_project(project)
+
+    matches = []
+    for item in configs:
+        if org_key and normalize_org(item.get('organization')) != org_key:
+            continue
+        if project_key and normalize_project(item.get('project')) != project_key:
+            continue
+        matches.append(item)
+
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        exact_default = [item for item in matches if item.get('_path') == str(CONFIG_PATH)]
+        return exact_default[0] if exact_default else matches[0]
+
+    wanted = ' / '.join(part for part in (organization, project) if part) or 'default'
+    available = ', '.join(
+        f'{item.get("organization")} / {item.get("project")} ({item.get("_path")})'
+        for item in configs
+    )
+    die(f'no Azure DevOps config found for {wanted}. Available configs: {available}')
 
 
 def extract_id(value):
@@ -291,16 +403,23 @@ def markdown_summary(work_item, comments, downloads):
 def main():
     parser = argparse.ArgumentParser(description='Fetch an Azure DevOps work item with comments and attachments.')
     parser.add_argument('work_item', help='Work item ID, #ID, or Azure DevOps URL')
+    parser.add_argument('--config', help='Config name or path under ~/.config/azure-devops; defaults to URL matching or config.json')
+    parser.add_argument('--organization', help='Azure DevOps organization override')
+    parser.add_argument('--project', help='Azure DevOps project override')
     parser.add_argument('--out-root', default=str(OUT_ROOT), help='Output root directory')
     args = parser.parse_args()
 
-    config = load_config()
+    config = select_config(args.work_item, args.config, args.organization, args.project)
     work_id = extract_id(args.work_item)
     auth = auth_header(config['pat'])
     org = urllib.parse.quote(config['organization'], safe='')
     project = urllib.parse.quote(config['project'], safe='')
     out_dir = Path(args.out_root) / work_id
     out_dir.mkdir(parents=True, exist_ok=True)
+    print(
+        f'Using Azure DevOps config: {config["_path"]} ({config["organization"]} / {config["project"]})',
+        file=sys.stderr,
+    )
 
     base = f'https://dev.azure.com/{org}/{project}/_apis/wit/workitems/{work_id}'
     work_item_url = f'{base}?api-version={API_VERSION}&$expand=All'

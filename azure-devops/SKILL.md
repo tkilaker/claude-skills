@@ -15,7 +15,7 @@ Use the bundled fetcher:
 python3 ~/.agents/skills/azure-devops/scripts/fetch_work_item.py 12345
 ```
 
-It reads `~/.config/azure-devops/config.json`, writes raw API responses and downloaded attachments under `/tmp/ado-workitems/<id>/`, and prints a markdown summary. It uses only the Python standard library.
+For bare IDs, it reads `~/.config/azure-devops/config.json`. For Azure DevOps URLs, it infers the organization/project from the URL and selects a matching `*.json` profile under `~/.config/azure-devops/`. It writes raw API responses and downloaded attachments under `/tmp/ado-workitems/<id>/`, and prints a markdown summary. It uses only the Python standard library.
 
 Expected config:
 
@@ -29,10 +29,21 @@ Expected config:
 
 PAT scope: Work Items (Read).
 
+Multiple orgs are supported by adding more JSON files in the same directory, for example:
+
+- `~/.config/azure-devops/config.json` for the default profile.
+- `~/.config/azure-devops/d365fo-hms-core.json` for `hms-industrial-networks` / `D365FO HMS Core`.
+
+If the input is a bare ID but a non-default profile is needed, pass the profile explicitly:
+
+```bash
+python3 ~/.agents/skills/azure-devops/scripts/fetch_work_item.py 27897 --config d365fo-hms-core
+```
+
 ## Workflow
 
 1. Extract the work item ID from the user's text. Accept plain IDs, `#12345`, PBI/bug/task references, or Azure DevOps URLs.
-2. Run `scripts/fetch_work_item.py <id-or-url>`.
+2. Run `scripts/fetch_work_item.py <id-or-url>`. Prefer the full Azure DevOps URL when the org/project is not the default profile.
 3. Read the printed markdown. If images were downloaded, inspect relevant local files with image tools before making visual claims.
 4. Answer with the ticket facts the user needs. Include important state, title, description, acceptance criteria, comments, blockers, and image paths when relevant.
 
