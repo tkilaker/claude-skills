@@ -32,12 +32,12 @@ PAT scope: Work Items (Read).
 Multiple orgs are supported by adding more JSON files in the same directory, for example:
 
 - `~/.config/azure-devops/config.json` for the default profile.
-- `~/.config/azure-devops/d365fo-hms-core.json` for `hms-industrial-networks` / `D365FO HMS Core`.
+- `~/.config/azure-devops/other-project.json` for another organization/project.
 
 If the input is a bare ID but a non-default profile is needed, pass the profile explicitly:
 
 ```bash
-python3 ~/.agents/skills/azure-devops/scripts/fetch_work_item.py 27897 --config d365fo-hms-core
+python3 ~/.agents/skills/azure-devops/scripts/fetch_work_item.py 27897 --config other-project
 ```
 
 ## Workflow
