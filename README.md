@@ -75,6 +75,7 @@ Skills that need credentials store them outside the repo:
 
 - **azure-devops**: `~/.config/azure-devops/config.json` (chmod 600)
 - **unifi-network**: macOS Keychain service `unifi-network-api-key`, or `~/.config/unifi/network-api-key` (chmod 600)
+- **uptime-kuma**: macOS Keychain service `uptime-kuma`, or `~/.config/uptime-kuma/password` (chmod 600)
 
 ## License
 

@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 
 from uptime_kuma_api import MonitorType, UptimeKumaApi
 
@@ -22,14 +24,25 @@ class PingMonitor:
 
 
 def kuma_password() -> str:
-    out = subprocess.check_output(
-        ["security", "find-generic-password", "-s", "uptime-kuma", "-w"],
-        text=True,
-        stderr=subprocess.DEVNULL,
-    ).strip()
-    if not out:
-        raise SystemExit("Missing Uptime Kuma password in Keychain service uptime-kuma.")
-    return out
+    if os.environ.get("UPTIME_KUMA_PASSWORD"):
+        return os.environ["UPTIME_KUMA_PASSWORD"].strip()
+
+    try:
+        out = subprocess.check_output(
+            ["security", "find-generic-password", "-s", "uptime-kuma", "-w"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        if out:
+            return out
+    except Exception:
+        pass
+
+    secret_file = Path.home() / ".config" / "uptime-kuma" / "password"
+    if secret_file.exists():
+        return secret_file.read_text(encoding="utf-8").strip()
+
+    raise SystemExit("Missing Uptime Kuma password. Store it in Keychain or ~/.config/uptime-kuma/password.")
 
 
 def desired_monitors() -> list[PingMonitor]:

@@ -25,7 +25,11 @@ Read the UniFi key in this order:
 2. macOS Keychain service `unifi-network-api-key`
 3. `$HOME/.config/unifi/network-api-key` with mode `0600`
 
-Read the Kuma password from macOS Keychain service `uptime-kuma`.
+Read the Kuma password in this order:
+
+1. `UPTIME_KUMA_PASSWORD`
+2. macOS Keychain service `uptime-kuma`
+3. `$HOME/.config/uptime-kuma/password` with mode `0600`
 
 ## Quick Commands
 
