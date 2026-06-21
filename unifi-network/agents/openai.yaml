@@ -1,0 +1,4 @@
+interface:
+  display_name: "UniFi Network"
+  short_description: "Inspect and manage Tim's UniFi home network"
+  default_prompt: "Use $unifi-network to inspect UniFi clients and update monitoring safely."

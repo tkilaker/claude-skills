@@ -40,13 +40,17 @@ Multi-agent code review for commits. Runs 5 parallel Sonnet agents (CLAUDE.md co
 
 Fetch Azure DevOps work items by ID. Requires config with PAT at `~/.config/azure-devops/config.json`.
 
+#### [unifi-network](./unifi-network/SKILL.md)
+
+Inspect and manage Tim's UniFi home network, static DHCP reservations, and Uptime Kuma monitoring.
+
 ## Installation
 
 Symlink skills to `~/.claude/skills/`:
 
 ```bash
 mkdir -p ~/.claude/skills
-for skill in apple-notes apple-reminders apple-calendar apple-mail clipboard azure-devops commit-review; do
+for skill in apple-notes apple-reminders apple-calendar apple-mail clipboard azure-devops commit-review unifi-network; do
   ln -s /path/to/claude-skills/$skill ~/.claude/skills/
 done
 ```
@@ -61,6 +65,7 @@ Some skills require CLI tools:
 | apple-reminders | reminders-cli | `brew install keith/formulae/reminders-cli` |
 | apple-calendar | icalbuddy | `brew install ical-buddy` |
 | azure-devops | jq | `brew install jq` |
+| unifi-network | jq, uv for Kuma sync | `brew install jq uv` |
 
 First run of Apple skills requires macOS automation permission approval.
 
@@ -69,6 +74,7 @@ First run of Apple skills requires macOS automation permission approval.
 Skills that need credentials store them outside the repo:
 
 - **azure-devops**: `~/.config/azure-devops/config.json` (chmod 600)
+- **unifi-network**: macOS Keychain service `unifi-network-api-key`, or `~/.config/unifi/network-api-key` (chmod 600)
 
 ## License
 
