@@ -1,11 +1,11 @@
 ---
 name: voice
-description: Rewrite drafts, rough notes, or bullet intent into Tim's written voice (confident, brief, warm, no AI markers) for any channel — email, Slack/Teams, PR/commit, doc/report, client proposal, LinkedIn — in Swedish or English. Use when Tim wants to write or polish a message as himself. Triggers on "in my voice", "make this sound like me", "polish this", "write this as me", "fixa mailet", "skriv om det här", "min stil", "redigera utkastet", "polera", and the /voice command.
+description: Rewrite drafts, notes, or bullet intent into Tim's written voice (confident, brief, warm, no AI markers) for any channel: email, Slack/Teams, GitHub issue/PR, commit, doc/report, client proposal, LinkedIn, in Swedish or English. Use whenever drafting communication Tim will send as himself, including GitHub issues, PR descriptions, and review comments. Triggers on "in my voice", "make this sound like me", "polish this", "write this as me", "github issue", "pr description", "fixa mailet", "skriv om det här", "min stil", "redigera utkastet", "polera", and the /voice command.
 ---
 
 # Voice — Tim's written communication
 
-Take a draft, rough notes, or bullet intent and return finished text in Tim's voice, structured for the channel. One job: make it sound like Tim. Do it extremely well.
+Take a draft, rough notes, or bullet intent and return finished text in Tim's voice, structured for the channel. One job: make it sound like Tim. Do it extremely well. This runs often, so keep it fast: lean on context already in front of you, don't go researching.
 
 ## Input
 
@@ -18,7 +18,7 @@ Take a draft, rough notes, or bullet intent and return finished text in Tim's vo
 If invoked with **no draft** (bare `/voice`) or with `help`, `?`, or `hjälp`, print this card verbatim and stop. Do not rewrite anything.
 
 ```
-/voice — write or polish text in Tim's voice
+/voice - write or polish text in Tim's voice
 
 GIVE IT:  a draft, rough notes, or bullets. Inline, from clipboard, or a file.
 GET BACK: finished text for the channel, copied to clipboard. No preamble.
@@ -31,9 +31,9 @@ STEER (optional, any order, SV/EN):
   metaphor  auto · off
 
 EXAMPLES:
-  /voice slack, to the team — vi missade deploy-fönstret, ny plan imorgon
+  /voice slack, to the team: vi missade deploy-fönstret, ny plan imorgon
   /voice mail till kund, kort: <utkast>
-  /voice in English, pr comment — <draft>
+  /voice in English, pr comment: <draft>
   fixa det här mailet: <utkast>        polish what's in my clipboard
 ```
 
@@ -51,9 +51,10 @@ EXAMPLES:
 ## Process
 
 1. **Resolve the dials** from explicit directives first, then inference.
-2. **Ask at most ONE concise question**, and only when a structural or formality choice is genuinely ambiguous and would change the output (e.g. "Short Slack note to the team, or a formal mail to the client?"). Offer 2-3 labeled options. Otherwise proceed without asking.
-3. **Rewrite** per the Voice rules + the channel template below.
-4. **Output only the finished text.** No preamble, no "Here's your rewritten mail:". Copy the result to the clipboard with `pbcopy`. If you changed something material (softened a commitment, dropped a claim, corrected a factual-looking error), add one short note *after* the text, clearly separated.
+2. **Anchor to context, cheaply.** Use what's already in front of you (this conversation, the current repo/cwd, an already-loaded README or AGENTS.md) to get names, domain terms, acronyms, and house terminology right, and to avoid restating what the reader already knows. At most one or two targeted lookups (a quick `rg` for a term, a skim of the project README), and only when a term in the draft is unclear and getting it wrong would matter. No research expeditions. When unsure of a fact or name, keep the draft's wording rather than invent.
+3. **Ask at most ONE concise question**, and only when a structural or formality choice is genuinely ambiguous and would change the output (e.g. "Short Slack note to the team, or a formal mail to the client?"). Offer 2-3 labeled options. Otherwise proceed without asking.
+4. **Rewrite** per the Voice rules + the channel template below.
+5. **Output only the finished text.** No preamble, no "Here's your rewritten mail:". Copy the result to the clipboard with `pbcopy`. If you changed something material (softened a commitment, dropped a claim, corrected a factual-looking error), add one short note *after* the text, clearly separated.
 
 ## Voice rules — always
 
