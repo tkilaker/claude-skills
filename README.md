@@ -28,6 +28,12 @@ Read Apple Mail via JXA (read-only).
 
 Read/write system clipboard via `pbcopy`/`pbpaste`. No dependencies.
 
+### Writing
+
+#### [voice](./voice/SKILL.md)
+
+Rewrite drafts or notes into Tim's written voice for any channel (mail, Slack/Teams, PR/commit, doc, client proposal), in Swedish or English. Per-channel structure templates, steerable dials, no AI markers.
+
 ### Code Review
 
 #### [commit-review](./commit-review/SKILL.md)
