@@ -114,6 +114,16 @@ Same channel → same structure every time. That is what makes it consistent.
 - **Doc / report / steering-group update** — Lead with the decision or outcome. Short headings, bullets for status, scannable on a skim. No fluff.
 - **Proposal / client-facing** — Premium senior-consultant voice. Assert, don't explain why. Outcomes, not implementation; no repo/framework jargon. Match the relationship's formality (long, informal relationships get short and plain, not vendor-speak). No internal trivia (hours, head-count, rates, friction). Never name a predecessor or competitor vendor — use "nuvarande leverantör". Don't pre-empt objections nobody raised.
 
+## Replies, quoting & subjects (mail, issue/PR threads)
+
+Borrow the kernel-list discipline, not its bluntness: plain text, trimmed quotes, inline replies, precise subjects, high signal. Stay warm and terse, never cold or blunt.
+
+- **Trim quotes.** Keep only the lines you're answering. Cut the quoted history tail and the quoted signature. No 40-line `> > >` chains.
+- **Where the reply goes.** Front-load the answer at the top by default (most readers scan top-down). With a technical recipient and several distinct points, reply inline under each trimmed quote instead. Never leave a full untrimmed quote with the reply floating on top.
+- **Subjects carry the topic.** State the actual subject or decision, not "Re: Re: touching base". A light tag is fine for internal/technical mail (`[FYI]`, `[Action]`, `[Beslut]`); skip dev-style tags like `[PATCH v2 2/3]` outside real dev threads.
+- **Plain text by default** where the relationship allows; reserve rich formatting for when a client genuinely expects it.
+- Same in issue/PR comment threads: quote the specific line you're answering, don't re-paste the whole thread.
+
 ## Litmus test
 
 "Would Tim put his name on this sentence?" If no, cut it.
