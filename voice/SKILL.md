@@ -28,7 +28,7 @@ STEER (optional, any order, SV/EN):
   audience  technical · non-technical · mixed   (gates the Feynman metaphor)
   language  sv · en      (default: matches your draft)
   length    tight · fuller          greeting  on · off
-  metaphor  auto · off
+  metaphor  auto · off              width     ~72 cols · off
 
 EXAMPLES:
   /voice slack, to the team: vi missade deploy-fönstret, ny plan imorgon
@@ -47,6 +47,7 @@ EXAMPLES:
 | length | tight / fuller | tight |
 | greeting | auto / on / off | auto — on for a new message, off when replying inside an active thread |
 | metaphor | auto / off | auto — a Feynman metaphor only when heavy tech meets a non-technical reader |
+| width | ~72 cols / off | ~72 for plain-text channels (mail body, commit body); off for reflowed channels (chat, Markdown, GitHub, LinkedIn) |
 
 ## Process
 
@@ -92,13 +93,24 @@ When the output language differs from the draft, **re-express the intent; never 
 - **EN** — new message: `Hi [Name]`. Active thread: none. Sign-off: `Best` / `Cheers`, matched to the relationship.
 - Strip stale openers and corporate sign-off boilerplate.
 
+## Layout — never wide
+
+A wide wall of text is a common "this looks off" tell. You can only set line width where the medium preserves your line breaks; otherwise you control the *feel* of width.
+
+- **Plain text (mail body, commit body, .txt):** hard-wrap at ~72 columns. No line spans a wide window. This is how tech people keep mail narrow, and it is the canonical git commit-body width.
+- **Rendered (Slack/Teams, Markdown, GitHub issues/PRs, LinkedIn, HTML mail):** the client reflows, so width is not yours to set and hard-wrapping zigzags on resize. Kill the feel of width instead: short paragraphs (2-4 lines), blank line between, bullets for anything enumerable, a heading every few blocks. Never a wall.
+- Always: front-load the point, short sentences, generous whitespace. The reader never tracks a long line or stares down a dense block.
+- Override per use with `width 80` or `no-wrap`.
+
+Caveat: hard-wrapped plain text can re-wrap raggedly on very narrow (mobile) screens. At ~72 that is uncommon for desktop mail, and it is the standard tradeoff for clean, narrow text.
+
 ## Channel templates — keep the shape identical across uses
 
 Same channel → same structure every time. That is what makes it consistent.
 
 - **Slack / Teams** — No greeting in an active thread. Very short blocks, 1-2 sentences each, blank line between. Bold at most one key word or decision. Lead with the ask or the answer. No sign-off.
-- **Mail** — Greeting per rule. Opening line = the point. Tight paragraphs; a bullet list when listing 3+ items. Sign-off. Subject line only when composing a new mail.
-- **PR / commit / review comment** — Imperative mood, terse, technical register. No greeting, no sign-off, no warmth filler. Commit subject ≤ ~50 chars, blank line, body explains the *why*.
+- **Mail** — Greeting per rule. Opening line = the point. Hard-wrap the body at ~72 columns so it never runs wide. Tight paragraphs (2-4 lines), blank line between; a bullet list when listing 3+ items. Sign-off. Subject line only when composing a new mail.
+- **PR / commit / review comment** — Imperative mood, terse, technical register. No greeting, no sign-off, no warmth filler. Commit subject ≤ ~50 chars, blank line, body wrapped at 72 columns explaining the *why*. PR, issue, and comment bodies are rendered Markdown, so don't hard-wrap those; use short paragraphs, lists, and headings.
 - **Doc / report / steering-group update** — Lead with the decision or outcome. Short headings, bullets for status, scannable on a skim. No fluff.
 - **Proposal / client-facing** — Premium senior-consultant voice. Assert, don't explain why. Outcomes, not implementation; no repo/framework jargon. Match the relationship's formality (long, informal relationships get short and plain, not vendor-speak). No internal trivia (hours, head-count, rates, friction). Never name a predecessor or competitor vendor — use "nuvarande leverantör". Don't pre-empt objections nobody raised.
 
