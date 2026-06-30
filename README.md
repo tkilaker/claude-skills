@@ -28,6 +28,11 @@ Read Apple Mail via JXA (read-only).
 
 Read/write system clipboard via `pbcopy`/`pbpaste`. No dependencies.
 
+#### [product-research](./product-research/SKILL.md)
+
+Interview-led best-buy product research for real purchases across stores,
+with evidence, tradeoffs, scoring, and explicit rejects.
+
 ### Writing
 
 #### [voice](./voice/SKILL.md)

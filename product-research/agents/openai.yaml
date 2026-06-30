@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Research"
+  short_description: "Interview-led best-buy product research"
+  default_prompt: "Use $product-research to help me choose a best-buy product from specific stores."
