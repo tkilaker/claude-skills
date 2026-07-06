@@ -32,7 +32,16 @@ In each `~/dev/*` repo where the last git commit is >6 months old AND nothing in
 
 ## Tier 3 — Downloads (rules + judgment)
 
-Delete files in `~/Downloads` older than 30 days that are **clearly software installers**: `.dmg`, `.pkg`, `.iso`, and `.zip` only when the name is unambiguously an app/tool release (e.g. `Tool-1.2.3-arm64.zip`). Judge each file by name. Ambiguous or data-looking archives → flag in the report, do not delete.
+`~/Downloads` is TCC-protected: in a launchd context without a Full Disk Access grant, any touch of it **blocks forever** on an invisible permission prompt. Probe before doing anything else in this tier:
+
+```sh
+rm -f /tmp/dl-probe; ( ls ~/Downloads >/dev/null 2>&1 && touch /tmp/dl-probe ) & sleep 5
+[ -f /tmp/dl-probe ] && echo accessible || echo BLOCKED
+```
+
+If BLOCKED: skip Tier 3 entirely, flag "Downloads inaccessible (TCC) — grant Full Disk Access to claude" in the report, and move on. Also pass an explicit short timeout on every Bash call in this tier so no single command can stall the run.
+
+If accessible: delete files in `~/Downloads` older than 30 days that are **clearly software installers**: `.dmg`, `.pkg`, `.iso`, and `.zip` only when the name is unambiguously an app/tool release (e.g. `Tool-1.2.3-arm64.zip`). Judge each file by name. Ambiguous or data-looking archives → flag in the report, do not delete.
 
 Never touch in Downloads: `~/Downloads/camel/`, spreadsheets, PDFs, CSVs, exports, anything that looks like work data.
 
