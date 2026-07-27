@@ -95,7 +95,7 @@ Common criteria:
 - Durability and maintenance.
 - Convenience and ergonomics.
 - Nice-use factor.
-- Sustainability or ethics, if the user cares.
+- Environmental fit, weighted by real difference between options.
 
 Penalize:
 
@@ -104,6 +104,14 @@ Penalize:
 - Risky ingredients/specs/materials for the user's constraints.
 - Heavy, bulky, fragile, hard-to-clean, hard-to-return, or high-maintenance options.
 - Products that solve a different problem than the user actually has.
+
+Environmental fit should not take over the recommendation unless the product-level difference is material. Consider the relevant axis for the category:
+
+- Packaging: refillable, reusable, recyclable, excessive, mixed-material, aerosol/propellant, or hard-to-sort packaging.
+- Ingredients and materials: problematic chemicals, allergens, microplastics, VOCs, solvents, PFAS, batteries, rare materials, or certified safer alternatives when relevant.
+- Durability and BIFL: expected lifespan, repairability, replaceable parts, warranty, spare-part availability, and whether paying more reduces replacement churn.
+- Use-phase impact: energy, water, consumables, filters, cartridges, bags, charging, cleaning chemicals, or waste created during normal use.
+- End-of-life: recyclability, hazardous waste handling, battery disposal, take-back programs, and resale/donation viability.
 
 Keep separate recommendation lanes when needed, for example:
 
@@ -125,3 +133,22 @@ Then include:
 - Clear notes where evidence is weak or the catalog sample is incomplete.
 
 Be direct, skeptical, and practical. Prefer a useful best-buy answer over a long neutral catalog summary.
+
+## Saved Recommendation Log
+
+When the user asks to save or maintain recommendation outputs, use Apple Notes if available.
+
+Default note title: `Best Buy Recommendations`.
+
+Each saved entry should be compact and repeatable:
+
+- Date and product category.
+- Top recommendation and where to buy it.
+- Small comparison table with product, current/best found price, fit, and caveat.
+- Pros.
+- Cons and watch-outs.
+- What the recommendation was based on: user brief, hard requirements, evidence type, and scoring logic.
+- Sources checked with retailer and external evidence links.
+- Notes about weak evidence, incomplete catalog coverage, price volatility, or environmental tradeoffs.
+
+If the note already exists, append or rewrite the note with the new entry preserved. Apple Notes rewrites HTML, so prefer rewriting the full body over fragile string replacement.

@@ -21,7 +21,7 @@ Log file: `~/Library/Logs/disk-cleanup.log`. Start each run with a header line: 
 - `npm cache clean --force`
 - `uv cache clean`, `pip cache purge`
 - `rm -rf ~/.cargo/registry/cache ~/.cache/*`
-- `~/Library/Caches/`: measure subdirs first (`du -sm ~/Library/Caches/* | sort -rn`), delete contents of subdirs >500MB, then sweep the rest. Skip `CloudKit` and `FamilyCircle` (system-managed).
+- `~/Library/Caches/`: measure subdirs first (`du -sm ~/Library/Caches/* | sort -rn`), then sweep every subdir's contents with `find "$dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} +`. Skip `CloudKit` and `FamilyCircle` (system-managed). Re-measure the total after — it should land near zero; if not, the sweep silently failed.
 - Xcode: `rm -rf ~/Library/Developer/Xcode/DerivedData`, `xcrun simctl delete unavailable`
 - Docker/OrbStack: `docker system prune -f`, `docker builder prune -af`, `docker volume prune -f` (dangling only). **Never `docker system prune -a` on images, never remove named volumes** — compose project data lives there.
 - `rm -rf ~/dev/brain/scratch/*` (documented safe to clobber)
@@ -41,9 +41,17 @@ rm -f /tmp/dl-probe; ( ls ~/Downloads >/dev/null 2>&1 && touch /tmp/dl-probe ) &
 
 If BLOCKED: skip Tier 3 entirely, flag "Downloads inaccessible (TCC) — grant Full Disk Access to claude" in the report, and move on. Also pass an explicit short timeout on every Bash call in this tier so no single command can stall the run.
 
-If accessible: delete files in `~/Downloads` older than 30 days that are **clearly software installers**: `.dmg`, `.pkg`, `.iso`, and `.zip` only when the name is unambiguously an app/tool release (e.g. `Tool-1.2.3-arm64.zip`). Judge each file by name. Ambiguous or data-looking archives → flag in the report, do not delete.
+If accessible, delete files older than 30 days that are:
 
-Never touch in Downloads: `~/Downloads/camel/`, spreadsheets, PDFs, CSVs, exports, anything that looks like work data.
+- **Clearly software installers**: `.dmg`, `.pkg`, `.iso`, and `.zip` only when the name is unambiguously an app/tool release (e.g. `Tool-1.2.3-arm64.zip`). Judge each file by name.
+- **Dated system exports** (approved 2026-07-06): re-exportable dumps from Data Portal/ERP/GitHub, recognizable as `Name_YYYY-MM-DD.(xlsx|csv|json)` or families like `SearchResults_*`, `Sustainability_Export_*`, `Assembly_Compliance_*`, `SalesOrder*`, `SerialNumber*`, `BulkImportErrors*`, `bom-compare-*`, `WhereUsed_*`, `manufacturers-*`, `*_PCN_Report_*`, BOM XML/pick-place outputs.
+- **Exact duplicates**: ` (N)`/` copy`/`-N` suffixed files whose checksum matches the base file. Differing content → keep both.
+
+Ambiguous or data-looking archives → flag in the report, do not delete.
+
+Downloads keeps a sorted structure (est. 2026-07-06): `docs/`, `assets/`, `dev/`, `media/` subfolders. File stray keepers into these rather than leaving them loose.
+
+Never touch in Downloads: the `watch-*` alias files (intentional shortcuts to NAS shares), and anything that looks like non-regenerable work data (contracts, received documents, recordings).
 
 ## Never touch, ever
 
@@ -53,10 +61,18 @@ Never touch in Downloads: `~/Downloads/camel/`, spreadsheets, PDFs, CSVs, export
 - Named Docker volumes
 - Never use `sudo`. Stay inside `$HOME`.
 
+## Execution gotchas (learned 2026-07-06)
+
+- **Never sweep with shell globs** (`rm -rf dir/* dir/.[!.]*`): zsh aborts the whole command when any glob has no match, so nothing is deleted while the log claims success. Use `find -mindepth 1 -maxdepth 1 -exec rm -rf {} +`, or `setopt null_glob` first.
+- **Verify every tier with du**: measure → delete → re-measure. A logged deletion is not a completed deletion.
+- **`df` may not move after freeing space**: local Time Machine snapshots pin deleted blocks for up to 24h. Check `tmutil listlocalsnapshots /`; if snapshots predate the run, report freed space as "snapshot-held, reclaims <24h" — don't re-run tiers or delete snapshots.
+- **Don't script with `ls`** — it's aliased (eza) and behaves differently piped. Use `find` for listing/counting.
+- `docker volume prune -f` only removes anonymous volumes on modern Docker — named compose volumes are safe, but verify with `docker volume ls` after anyway.
+
 ## Report
 
 Final message AND appended to the log:
 
-- Freed total and per tier; free space before → after
+- Freed total (file-level, from du) and per tier; free space before → after. If df's delta is smaller than file-level freed, say why (snapshot-held).
 - Ranked list of flagged manual candidates with sizes: big idle user content (e.g. ComfyUI models on mbp), large non-installer Downloads, whole stale repos. Suggest the NAS `dat` share as archive target for anything worth keeping.
 - Push summary: `curl -s -H "Title: disk-cleanup" -d "$(hostname -s): freed <X>GB, <Y>GB free, <N> flagged" ntfy.sh/tim-claude-7k9x2m`
