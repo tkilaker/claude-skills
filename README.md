@@ -33,6 +33,10 @@ Read/write system clipboard via `pbcopy`/`pbpaste`. No dependencies.
 Interview-led best-buy product research for real purchases across stores,
 with evidence, tradeoffs, scoring, and explicit rejects.
 
+#### [queue-media-torrent](./queue-media-torrent/SKILL.md)
+
+Validate and safely queue authorized media torrents in NAS watch folders.
+
 ### Writing
 
 #### [voice](./voice/SKILL.md)
