@@ -22,14 +22,16 @@ Never write API keys into repo files, command output, docs, or chat.
 Read the UniFi key in this order:
 
 1. `UNIFI_API_KEY`
-2. macOS Keychain service `unifi-network-api-key`
-3. `$HOME/.config/unifi/network-api-key` with mode `0600`
+2. `~/bin/agent-secret get UNIFI_API_KEY`
+3. macOS Keychain service `unifi-network-api-key` (legacy fallback)
+4. `$HOME/.config/unifi/network-api-key` with mode `0600` (legacy fallback)
 
 Read the Kuma password in this order:
 
 1. `UPTIME_KUMA_PASSWORD`
-2. macOS Keychain service `uptime-kuma`
-3. `$HOME/.config/uptime-kuma/password` with mode `0600`
+2. `~/bin/agent-secret get UPTIME_KUMA_PASSWORD`
+3. macOS Keychain service `uptime-kuma` (legacy fallback)
+4. `$HOME/.config/uptime-kuma/password` with mode `0600` (legacy fallback)
 
 ## Quick Commands
 

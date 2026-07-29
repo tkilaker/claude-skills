@@ -27,6 +27,10 @@ def kuma_password() -> str:
     if os.environ.get("UPTIME_KUMA_PASSWORD"):
         return os.environ["UPTIME_KUMA_PASSWORD"].strip()
 
+    secret = unifi_network.read_agent_secret("UPTIME_KUMA_PASSWORD")
+    if secret:
+        return secret
+
     try:
         out = subprocess.check_output(
             ["security", "find-generic-password", "-s", "uptime-kuma", "-w"],
@@ -42,7 +46,7 @@ def kuma_password() -> str:
     if secret_file.exists():
         return secret_file.read_text(encoding="utf-8").strip()
 
-    raise SystemExit("Missing Uptime Kuma password. Store it in Keychain or ~/.config/uptime-kuma/password.")
+    raise SystemExit("Missing Uptime Kuma password. Store UPTIME_KUMA_PASSWORD in Agent Secrets.")
 
 
 def desired_monitors() -> list[PingMonitor]:

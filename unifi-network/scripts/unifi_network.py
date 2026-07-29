@@ -14,7 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 LOCAL_BASE = "https://192.168.1.1/proxy/network/integration/v1"
@@ -22,9 +22,29 @@ SITE_MANAGER = "https://api.ui.com/v1"
 DEFAULT_SITE = "default"
 
 
+def read_agent_secret(name: str) -> Optional[str]:
+    helper = Path.home() / "bin" / "agent-secret"
+    if not helper.exists():
+        return None
+    try:
+        out = subprocess.check_output(
+            [str(helper), "get", name],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=15,
+        ).strip()
+        return out or None
+    except Exception:
+        return None
+
+
 def read_secret() -> str:
     if os.environ.get("UNIFI_API_KEY"):
         return os.environ["UNIFI_API_KEY"].strip()
+
+    secret = read_agent_secret("UNIFI_API_KEY")
+    if secret:
+        return secret
 
     if sys.platform == "darwin":
         try:
@@ -42,7 +62,7 @@ def read_secret() -> str:
     if secret_file.exists():
         return secret_file.read_text(encoding="utf-8").strip()
 
-    raise SystemExit("Missing UniFi API key. Store it in Keychain or ~/.config/unifi/network-api-key.")
+    raise SystemExit("Missing UniFi API key. Store UNIFI_API_KEY in Agent Secrets.")
 
 
 def request_json(url: str, key: str, method: str = "GET", body: dict[str, Any] | None = None) -> Any:
