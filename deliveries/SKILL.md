@@ -73,7 +73,7 @@ En post:
 }
 ```
 
-`seen` håller bara de senaste ~400 källorna, klipp äldre. Avslutade poster flyttas till `closed.jsonl`, en rad per post. `log.md` är den läsbara händelseloggen.
+Alla tidsstämplar i state är UTC med `Z`, aldrig lokal tid. `seen` håller bara de senaste ~400 källorna, klipp äldre. Avslutade poster flyttas till `closed.jsonl`, en rad per post. `log.md` är den läsbara händelseloggen.
 
 Statusar: `ordered` → `shipped` → `out_for_delivery` → `ready_for_pickup` → `delivered` → `closed`. Plus `overdue` som sätts vid sidan av, och `unknown` när mailet är orderrelaterat men inget går att slå fast.
 
@@ -120,7 +120,7 @@ En order kan bli flera leveranser (delleverans). Skapa då en post per kolli och
 | `ready_for_pickup` | Reminder + ntfy. |
 | `delivered` hem eller i postlåda | ntfy. Sätt `closed`. |
 | Ohämtad ≥ 4 dagar efter avisering | ntfy med skarpare ton, uppdatera befintlig reminder. Ombudet returnerar snart. |
-| `overdue` | ntfy + reminder `Kolla leverans: <merchant> <order_ref>`. |
+| `overdue` | ntfy alltid. Reminder `Kolla leverans: <merchant> <order_ref>` bara när det finns något konkret att göra: kolli-id, ombud eller orderref att slå upp. Saknas allt sådant räcker ntfy, en reminder utan handling är brus. |
 | Retur påbörjad, `return_by` känt | Reminder 3 dagar före deadline. |
 | Återbetalning bekräftad | ntfy. Sätt `closed`. |
 
