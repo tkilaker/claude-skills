@@ -18,7 +18,7 @@ Ett pass läser ny mail och nya SMS, uppdaterar leveransstate, utför åtgärder
 | `DELIVERY_DRY_RUN` | tom | `1` = utför inga sidoeffekter, skriv bara ut vad som skulle hända. |
 | `DELIVERY_SINCE` | tom | ISO-tid eller `30d`. Överstyr `last_run` för backfill. |
 
-Skripten ligger i samma katalog som denna fil, under `scripts/`. Använd absoluta sökvägar när du kör dem.
+Skripten ligger i `~/dev/claude-skills/deliveries/scripts/` (samma katalog som denna fil). Använd den sökvägen rakt av.
 
 ## State
 
@@ -66,8 +66,8 @@ Statusar: `ordered` → `shipped` → `out_for_delivery` → `ready_for_pickup` 
 2. Bestäm fönster: `DELIVERY_SINCE` om satt, annars `last_run` minus 24 h marginal, annars 7 dagar bakåt.
 3. Harvesta:
    ```bash
-   osascript -l JavaScript <skilldir>/scripts/harvest-mail.js "$SINCE_ISO" 60
-   <skilldir>/scripts/harvest-sms.sh "$SINCE_ISO" 80
+   osascript -l JavaScript ~/dev/claude-skills/deliveries/scripts/harvest-mail.js "$SINCE_ISO" 60
+   ~/dev/claude-skills/deliveries/scripts/harvest-sms.sh "$SINCE_ISO" 80
    ```
 4. Släng allt vars `source` redan finns i `seen`.
 5. Klassa varje post: orderrelaterad eller inte. Se nedan.
@@ -76,7 +76,7 @@ Statusar: `ordered` → `shipped` → `out_for_delivery` → `ready_for_pickup` 
 8. Utför åtgärder.
 9. Arkivera mail som tolkades och sparades:
    ```bash
-   osascript -l JavaScript <skilldir>/scripts/archive-mail.js <mailbox_id> [...]
+   osascript -l JavaScript ~/dev/claude-skills/deliveries/scripts/archive-mail.js <mailbox_id> [...]
    ```
 10. Skriv state atomiskt (`tmp` + `mv`), appenda `log.md`, sätt `last_run` till passets starttid.
 
