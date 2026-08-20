@@ -7,22 +7,39 @@ description: Bevakar all orderrelaterad kommunikation (mail + SMS), håller stat
 
 Ett pass läser ny mail och nya SMS, uppdaterar leveransstate, utför åtgärder och arkiverar behandlad mail. Körs schemalagt på Mac Mini via `~/bin/delivery-watch`, men kan köras manuellt var som helst.
 
-## Config
+## Parametrar
 
-| Env | Default | Betydelse |
-|-----|---------|-----------|
-| `DELIVERY_MAIL_ACCOUNT` | `Privat` | Mail-konto. Heter `tkilaker@icloud.com` på mbp, `Privat` på mini. |
-| `DELIVERY_STATE_DIR` | `~/dev/brain/projects/deliveries` | State och logg. |
-| `DELIVERY_LIST` | `Life Hub 🎯` | Reminders-lista. Matcha på prefix `Life Hub` om namnet inte träffar exakt. |
-| `DELIVERY_NTFY` | `https://ntfy.sh/tim-claude-7k9x2m` | Notiskanal. |
-| `DELIVERY_DRY_RUN` | tom | `1` = utför inga sidoeffekter, skriv bara ut vad som skulle hända. |
-| `DELIVERY_SINCE` | tom | ISO-tid eller `30d`. Överstyr `last_run` för backfill. |
+Wrappern `delivery-watch` skickar in alla parametrar i prompten. **Härled dem aldrig om, läs inga env-variabler, gissa inget tidsfönster.**
+
+| Parameter | Betydelse |
+|-----------|-----------|
+| `MODE` | `DRY_RUN=1` eller `DRY_RUN=0`. Se stoppregeln nedan. |
+| `SINCE` | ISO-tid. Harvesta allt efter denna tidpunkt, inget annat fönster. |
+| `RUN_START` | Sätt `last_run` till detta värde när passet är klart. |
+| `STATE_DIR` | Katalog för `state.json`, `closed.jsonl`, `log.md`. |
+| `MAIL_ACCOUNT` | Mail-konto. Redan exporterat som `DELIVERY_MAIL_ACCOUNT` till skripten. |
+| `REMINDER_LIST` | Reminders-lista. |
+| `NTFY` | Notis-URL. |
+
+Kommer prompten utan parametrar (Tim körde skillen för hand): fråga vad han vill, kör inget skarpt pass oombedd.
+
+### Stoppregel för torra pass
+
+Är `MODE` `DRY_RUN=1` gäller detta utan undantag:
+
+- skriv inte `state.json`, `closed.jsonl` eller `log.md`
+- skapa, ändra eller ta bort inga reminders
+- flytta ingen mail
+- skicka ingen ntfy
+- committa och pusha ingenting
+
+Skriv bara ut vad passet skulle ha gjort. Ett torrt pass som ändrar något är ett fel, inte en hjälpsamhet.
 
 Skripten ligger i `~/dev/claude-skills/deliveries/scripts/` (samma katalog som denna fil). Använd den sökvägen rakt av.
 
 ## State
 
-`$DELIVERY_STATE_DIR/state.json`:
+`$STATE_DIR/state.json`:
 
 ```json
 {
@@ -62,12 +79,12 @@ Statusar: `ordered` → `shipped` → `out_for_delivery` → `ready_for_pickup` 
 
 ## Körsekvens
 
-1. Läs `state.json`. Saknas den, skapa `{"last_run": null, "deliveries": [], "seen": []}`.
-2. Bestäm fönster: `DELIVERY_SINCE` om satt, annars `last_run` minus 24 h marginal, annars 7 dagar bakåt.
+1. Läs `$STATE_DIR/state.json`. Wrappern har redan skapat den om den saknades.
+2. Fönstret är `SINCE` ur prompten. Räkna inte om det.
 3. Harvesta:
    ```bash
-   osascript -l JavaScript ~/dev/claude-skills/deliveries/scripts/harvest-mail.js "$SINCE_ISO" 60
-   ~/dev/claude-skills/deliveries/scripts/harvest-sms.sh "$SINCE_ISO" 80
+   osascript -l JavaScript ~/dev/claude-skills/deliveries/scripts/harvest-mail.js "<SINCE>" 60
+   ~/dev/claude-skills/deliveries/scripts/harvest-sms.sh "<SINCE>" 80
    ```
 4. Släng allt vars `source` redan finns i `seen`.
 5. Klassa varje post: orderrelaterad eller inte. Se nedan.
@@ -78,7 +95,7 @@ Statusar: `ordered` → `shipped` → `out_for_delivery` → `ready_for_pickup` 
    ```bash
    osascript -l JavaScript ~/dev/claude-skills/deliveries/scripts/archive-mail.js <mailbox_id> [...]
    ```
-10. Skriv state atomiskt (`tmp` + `mv`), appenda `log.md`, sätt `last_run` till passets starttid.
+10. Skriv state atomiskt (`tmp` + `mv`, validera JSON före flytt), appenda `log.md`, sätt `last_run` till `RUN_START`. Ligger `STATE_DIR` i brain: committa och pusha enligt brains vanliga regler.
 
 ## Klassning
 
@@ -116,7 +133,7 @@ Förseningsregler, kör mot alla öppna poster:
 Reminder för avhämtning:
 
 ```bash
-reminders add "$DELIVERY_LIST" "Hämta: <artiklar> – <ombud>" \
+reminders add "$REMINDER_LIST" "Hämta: <artiklar> – <ombud>" \
   --due-date "today 17:00" \
   --notes "Kod: <pickup_code>
 Kolli: <tracking> (<carrier>)
@@ -132,7 +149,7 @@ Max en ntfy per pass. Slå ihop alla händelser till ett meddelande. Inga hände
 
 ```bash
 curl -s -H "Title: Leveranser" -H "Tags: package" \
-  -d "<rad per händelse>" "$DELIVERY_NTFY"
+  -d "<rad per händelse>" "$NTFY"
 ```
 
 Radform: `✅ Hämta hos ICA Maxi: USB-C-hubb (kod 482913)`, `📦 Levererat: Zalando-paketet`, `⚠️ Försenat: Amazon 402-1234567, ETA var 2026-08-18`.
@@ -144,7 +161,7 @@ Radform: `✅ Hämta hos ICA Maxi: USB-C-hubb (kod 482913)`, `📦 Levererat: Za
 - SMS rörs aldrig, bara läses.
 - `seen` gör passen idempotenta. `notified` hindrar dubbelnotiser, `reminder_id` hindrar dubbla påminnelser.
 - Skriv aldrig state innan åtgärderna är gjorda, och skriv atomiskt.
-- Är `DELIVERY_DRY_RUN=1`: skriv ut planerade åtgärder till stdout, rör inte mail, reminders, ntfy eller state.
+- Är `MODE` `DRY_RUN=1`: följ stoppregeln överst. Inga sidoeffekter, punkt.
 
 ## Personlig integritet
 
@@ -153,8 +170,8 @@ Radform: `✅ Hämta hos ICA Maxi: USB-C-hubb (kod 482913)`, `📦 Levererat: Za
 ## Manuell körning
 
 ```bash
-DELIVERY_DRY_RUN=1 DELIVERY_SINCE=30d ~/bin/delivery-watch   # se vad den skulle göra
-~/bin/delivery-watch                                          # ett skarpt pass
+delivery-watch --dry-run --since 30d   # se vad den skulle göra
+delivery-watch                          # ett skarpt pass
 ```
 
 Frågar Tim "vad väntar jag på", läs `state.json` och svara ur den. Kör inget pass om han bara frågar.
