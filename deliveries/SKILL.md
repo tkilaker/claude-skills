@@ -186,6 +186,19 @@ Tre vägar, alla giltiga:
 
 Stäng aldrig en post enbart för att den är gammal. En obekräftad leverans som tystnar är precis det som ska synas.
 
+## Sista raden i varje pass
+
+Avsluta alltid utdatan med exakt en av dessa rader, som allra sista rad:
+
+```
+PASS: ok events=<antal> closed=<antal> new=<antal>
+PASS: blocked <kort skäl på en rad>
+```
+
+`blocked` gäller så snart något steg inte gick att köra: AppleEvent-timeout, `reminders` som hänger, oläsbar state. Wrappern letar efter raden och larmar om den saknas eller säger `blocked`. Utan den kan ett pass som inte gjorde någonting se ut som ett lyckat pass, och då är bevakningen värdelös.
+
+Ett torrt pass avslutas med `PASS: ok` och siffror för vad som skulle ha gjorts.
+
 ## Rätta och förbättra
 
 Säger Tim att något är fel eller borde göras annorlunda, avgör först vilken av två saker det är.
