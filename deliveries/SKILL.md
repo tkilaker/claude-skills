@@ -27,7 +27,7 @@ Kommer prompten utan parametrar (Tim körde skillen för hand): fråga vad han v
 
 Är `MODE` `DRY_RUN=1` gäller detta utan undantag:
 
-- skriv inte `state.json`, `closed.jsonl` eller `log.md`
+- skriv inte `state.json`, `closed.jsonl`, `log.md`, `observations.jsonl` eller `corrections.jsonl`
 - skapa, ändra eller ta bort inga reminders
 - flytta ingen mail
 - skicka ingen ntfy
@@ -97,14 +97,15 @@ Statusar: `ordered` → `shipped` → `out_for_delivery` → `ready_for_pickup` 
    Har en öppen leverans ett `reminder_id` som ligger i den avbockade listan, eller som inte finns i någon av listorna alls (påminnelsen är raderad), är den hämtad. Sätt `delivered`, flytta till `closed.jsonl`, logga. Skicka ingen ntfy, Tim vet att han hämtade den.
 5. Släng allt vars `source` redan finns i `seen`.
 6. Klassa varje post: orderrelaterad eller inte. Se nedan.
-7. För varje orderrelaterad post: extrahera fälten, matcha mot befintlig leverans, uppdatera eller skapa.
-8. Räkna fram förseningar över hela `deliveries`, även poster som inte fick ny inkommande post detta pass.
-9. Utför åtgärder.
-10. Arkivera mail som tolkades och sparades:
+7. Skriv en observationsrad för varje post som **inte** var orderrelaterad, se "Analysunderlag" nedan. Detta är enda stället där nej-högen sparas.
+8. För varje orderrelaterad post: extrahera fälten, matcha mot befintlig leverans, uppdatera eller skapa.
+9. Räkna fram förseningar över hela `deliveries`, även poster som inte fick ny inkommande post detta pass.
+10. Utför åtgärder.
+11. Arkivera mail som tolkades och sparades:
    ```bash
    osascript -l JavaScript ~/dev/claude-skills/deliveries/scripts/archive-mail.js <mailbox_id> [...]
    ```
-11. Skriv state atomiskt (`tmp` + `mv`, validera JSON före flytt), appenda `log.md`, sätt `last_run` till `RUN_START`. Ligger `STATE_DIR` i brain: committa och pusha enligt brains vanliga regler.
+12. Skriv state atomiskt (`tmp` + `mv`, validera JSON före flytt), appenda `log.md`, sätt `last_run` till `RUN_START`. Ligger `STATE_DIR` i brain: committa och pusha enligt brains vanliga regler.
 
 ## Klassning
 
@@ -186,12 +187,55 @@ Tre vägar, alla giltiga:
 
 Stäng aldrig en post enbart för att den är gammal. En obekräftad leverans som tystnar är precis det som ska synas.
 
+## Analysunderlag
+
+Systemet ska kunna växa bortom leveranser. Det som avgör vad som är värt att bygga är strömmen av post som klassas som *inte* orderrelaterad, och den kastas annars bort varje pass. Spara den.
+
+`$STATE_DIR/observations.jsonl`, en rad per icke-orderrelaterad post, append-only, aldrig omskriven:
+
+```json
+{"date":"2026-08-20","ch":"mail","from":"notifications@github.com","machine":true,"cat":"dev-notis","subject":"[ekman-group] deploy failed","action":false}
+{"date":"2026-08-20","ch":"mail","from":"axel@ekmangroup.com","machine":false,"cat":"person","action":true}
+```
+
+**Ämnesraden sparas bara för maskinavsändare.** `machine: true` när avsändaradressen är automatisk (`no-reply`, `noreply`, `donotreply`, `notifications`, `mailer`, `bounce`, `alert`, `info`, `news`, `system`) eller när posten uppenbart är maskingenererad bulk: notis, kvitto, avi, nyhetsbrev, kampanj. Skriver en människa till Tim är `machine` false och `subject` utelämnas helt. Personlig korrespondens ska inte ligga i git-historik för alltid, och den behövs inte för att se mönstren.
+
+`cat` håller sig till denna vokabulär så att aggregering fungerar: `dev-notis`, `kvitto`, `faktura`, `bokning`, `myndighet`, `bank`, `nyhetsbrev`, `kampanj`, `social`, `prenumeration`, `skola`, `förening`, `person`, `okänt`. Behövs en ny kategori, lägg till den här och notera det i `log.md`, hitta inte på engångskategorier.
+
+`action` är din bedömning: kräver posten att Tim gör något?
+
+**SMS-filtret rörs inte.** `harvest-sms.sh` släpper redan bara igenom kortnummer och avsändar-ID:n. Observationer skrivs bara för det som passerat filtret. Vidga aldrig filtret för att få mer analysunderlag, personliga konversationer ska inte in i den här filen.
+
+### Rättelser
+
+`$STATE_DIR/corrections.jsonl`, en rad varje gång Tim rättar något:
+
+```json
+{"date":"2026-08-20","what":"matchning","before":"CityMail och Bow19 som två poster","after":"samma kolli","why":"ingen tracking matchade, men datumen hängde ihop"}
+```
+
+Detta är det högsta signalvärdet som finns i systemet: varje rad är ett fall där reglerna gav fel svar. Skriv en rad även när rättelsen är liten.
+
+### Driftsdata
+
+`$STATE_DIR/passes.jsonl` skrivs av wrappern, inte av dig. En rad per skarpt pass med tid, längd, exitkod och resultatrad.
+
+### Vad en framtida agent ska svara på
+
+Underlaget finns för att kunna besvara detta utan att gissa:
+
+- Vad består inkorgen faktiskt av, i volym per `cat` och per avsändare?
+- Vilka återkommande avsändare kräver `action` och hanteras fortfarande för hand?
+- Vilka kategorier är rena arkiveringskandidater, alltså hög volym och `action: false`?
+- Var är reglerna svagast, mätt i `corrections.jsonl`?
+- Är bevakningen pålitlig nog att bygga vidare på, mätt i andel `PASS: ok` i `passes.jsonl`?
+
 ## Sista raden i varje pass
 
 Avsluta alltid utdatan med exakt en av dessa rader, som allra sista rad:
 
 ```
-PASS: ok events=<antal> closed=<antal> new=<antal>
+PASS: ok events=<antal> closed=<antal> new=<antal> obs=<antal>
 PASS: blocked <kort skäl på en rad>
 ```
 
