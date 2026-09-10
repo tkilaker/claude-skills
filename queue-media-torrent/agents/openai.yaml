@@ -1,4 +1,0 @@
-interface:
-  display_name: "Queue Media Torrent"
-  short_description: "Safely queue an authorized media torrent"
-  default_prompt: "Use $queue-media-torrent to place this authorized torrent in the correct NAS watch folder."
