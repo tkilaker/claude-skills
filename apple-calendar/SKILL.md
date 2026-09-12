@@ -5,12 +5,12 @@ description: Manage Apple Calendar events. Triggers on "my calendar", "schedule"
 
 # Apple Calendar
 
-Access via `pim` (`~/dev/pim`, installed at `~/.local/bin/pim`). JSON in, JSON out.
+Access via `ekit` (`~/dev/ekit`, installed at `~/.local/bin/ekit`). JSON in, JSON out.
 
 `icalbuddy` and other EventKit CLIs do **not** work when invoked from Claude
 Code: the bundle declares no Calendars usage string, so TCC hard-denies with no
-prompt and `icalbuddy` reports "No calendars" or nothing at all. `pim` falls back
-to its LaunchAgent, which holds the grant. See `~/dev/pim/README.md`.
+prompt and `icalbuddy` reports "No calendars" or nothing at all. `ekit` falls back
+to its LaunchAgent, which holds the grant. See `~/dev/ekit/README.md`.
 
 Event routing per account is in `~/dev/brain/projects/calendar/README.md`. Read it
 before creating anything. Busy-time mirroring is owned by `calsync` — never copy
@@ -19,12 +19,12 @@ events between calendars by hand.
 ## Reading
 
 ```bash
-pim calendars                                              # all calendars
-pim events                                                 # today
-pim events --from 2026-09-15 --to 2026-09-22               # range
-pim events --from 2026-09-15 --to 2026-09-17 --cal Personlig
-pim events --from 2026-09-15 --to 2026-10-15 --search rep  # title, notes, location
-pim events --limit 20
+ekit calendars                                              # all calendars
+ekit events                                                 # today
+ekit events --from 2026-09-15 --to 2026-09-22               # range
+ekit events --from 2026-09-15 --to 2026-09-17 --cal Personlig
+ekit events --from 2026-09-15 --to 2026-10-15 --search rep  # title, notes, location
+ekit events --limit 20
 ```
 
 `--to` defaults to one day after `--from`. Recurring events are expanded within
@@ -33,7 +33,7 @@ the range, and each carries `"recurring": true`.
 Next 48 hours:
 
 ```bash
-pim events --from "$(date +%Y-%m-%d)" --to "$(date -v+2d +%Y-%m-%d)"
+ekit events --from "$(date +%Y-%m-%d)" --to "$(date -v+2d +%Y-%m-%d)"
 ```
 
 Output times are local ISO8601 with offset (`2026-09-12T10:00:00+02:00`).
@@ -41,14 +41,14 @@ Output times are local ISO8601 with offset (`2026-09-12T10:00:00+02:00`).
 ## Writing
 
 ```bash
-pim event-add --cal Personlig --title "Möte" \
+ekit event-add --cal Personlig --title "Möte" \
   --start "2026-09-15 14:00" --end "2026-09-15 15:00" \
   --location "Malmö" --notes "..."
 
-pim event-add --cal Personlig --title "Semester" --start 2026-09-20 --allday
+ekit event-add --cal Personlig --title "Semester" --start 2026-09-20 --allday
 
-pim event-edit <id> --title "..." --start "..." --end "..." --location "..." --notes "..."
-pim event-delete <id>
+ekit event-edit <id> --title "..." --start "..." --end "..." --location "..." --notes "..."
+ekit event-delete <id>
 ```
 
 `<id>` is the `id` field from any read. `--end` defaults to one hour after
@@ -59,7 +59,7 @@ events in the same language Tim uses there.
 
 ## When something fails
 
-Run `pim status` first. It reports authorization per domain and never prompts:
+Run `ekit status` first. It reports authorization per domain and never prompts:
 
 ```json
 { "calendar": "writeOnly", "reminders": "authorized", "responsibleHint": "direct" }
