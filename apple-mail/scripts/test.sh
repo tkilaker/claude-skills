@@ -1,52 +1,23 @@
 #!/bin/bash
-# Test script for Apple Mail skill (read-only)
+set -euo pipefail
 
-echo "=== Apple Mail Skill Test (Read-Only) ==="
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+MAIL="$ROOT/scripts/mail"
+RULES="$ROOT/config/rules.example.json"
+export APPLE_MAIL_TIMEOUT_SECONDS="${APPLE_MAIL_TIMEOUT_SECONDS:-10}"
+# Scheduled runs start without a locale; Ruby then reads stdin as US-ASCII and fails on non-ASCII subjects.
+export LANG="${LANG:-en_US.UTF-8}"
+STATE="$(mktemp -d)"
+trap 'rm -rf "$STATE"' EXIT
 
-# List accounts
-echo "1. Listing accounts..."
-ACCOUNTS=$(osascript -l JavaScript -e 'const app = Application("Mail"); app.accounts().map(a => a.name()).join(", ")' 2>/dev/null)
-if [ -n "$ACCOUNTS" ]; then
-    echo "   PASS: Accounts: $ACCOUNTS"
-else
-    echo "   WARN: No accounts or Mail not configured"
-fi
+json() { ruby -rjson -e 'JSON.parse(STDIN.read)' >/dev/null; }
 
-# Unread count
-echo "2. Getting unread count..."
-UNREAD=$(osascript -l JavaScript -e 'const app = Application("Mail"); app.inbox.unreadCount()' 2>/dev/null)
-if [ -n "$UNREAD" ]; then
-    echo "   PASS: Unread: $UNREAD"
-else
-    echo "   WARN: Could not get unread count"
-fi
+"$MAIL" '{"action":"accounts"}' | json
+"$MAIL" '{"action":"list","limit":3}' | json
+"$MAIL" '{"action":"paths"}' | json
+"$MAIL" "{\"action\":\"audit-healthcheck\",\"auditPath\":\"$STATE/audit.jsonl\"}" | ruby -rjson -e 'abort "audit failed" unless JSON.parse(STDIN.read).fetch("status") == "ok"'
+test -s "$STATE/audit.jsonl"
+"$MAIL" "{\"action\":\"validate-rules\",\"rulesPath\":\"$RULES\"}" | ruby -rjson -e 'abort "rules invalid" unless JSON.parse(STDIN.read).fetch("valid")'
+"$MAIL" "{\"action\":\"run-rule\",\"rulesPath\":\"$RULES\",\"name\":\"example-invoice-forward\"}" | ruby -rjson -e 'abort "expected disabled" unless JSON.parse(STDIN.read).fetch("status") == "disabled"'
 
-# Recent emails
-echo "3. Listing recent emails (up to 3)..."
-EMAILS=$(osascript -l JavaScript -e '
-const app = Application("Mail");
-const msgs = app.inbox.messages().slice(0, 3);
-msgs.map(m => "  - " + m.subject().substring(0, 50)).join("\n");
-' 2>/dev/null)
-if [ -n "$EMAILS" ]; then
-    echo "   PASS: Recent emails found"
-    echo "$EMAILS"
-else
-    echo "   WARN: No emails or inbox empty"
-fi
-
-# Search capability check
-echo "4. Search capability check..."
-SEARCH_RESULT=$(osascript -l JavaScript -e '
-const app = Application("Mail");
-try {
-    app.inbox.messages.whose({subject: {_contains: "test"}})().length >= 0 ? "PASS" : "FAIL";
-} catch(e) { "FAIL: " + e; }
-' 2>/dev/null)
-if [ "$SEARCH_RESULT" = "PASS" ]; then
-    echo "   PASS: Search working"
-else
-    echo "   WARN: Search may have issues"
-fi
-
-echo "=== Done ==="
+echo "PASS: read operations, rule validation, and disabled-rule guard"

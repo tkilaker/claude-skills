@@ -1,0 +1,39 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+LOCK_DIR="${TMPDIR:-/tmp}/apple-mail-agent.lock"
+TIMEOUT_SECONDS="${APPLE_MAIL_TIMEOUT_SECONDS:-45}"
+
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  holder="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+  if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+    rm -f "$LOCK_DIR/pid"
+    rmdir "$LOCK_DIR" 2>/dev/null || true
+  fi
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo '{"error":"Apple Mail is already processing another automation request."}' >&2
+    exit 75
+  fi
+fi
+printf '%s\n' "$$" > "$LOCK_DIR/pid"
+trap 'rm -f "$LOCK_DIR/pid"; rmdir "$LOCK_DIR"' EXIT INT TERM
+
+/usr/bin/osascript -l JavaScript "$ROOT/scripts/mail.js" "$@" &
+pid=$!
+(
+  sleep "$TIMEOUT_SECONDS"
+  kill -TERM "$pid" 2>/dev/null || true
+) >/dev/null 2>&1 &
+watchdog=$!
+
+set +e
+wait "$pid"
+status=$?
+set -e
+kill "$watchdog" 2>/dev/null || true
+wait "$watchdog" 2>/dev/null || true
+if [ "$status" -eq 143 ]; then
+  echo "{\"error\":\"Apple Mail did not respond within ${TIMEOUT_SECONDS}s.\"}" >&2
+fi
+exit "$status"
