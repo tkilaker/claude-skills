@@ -53,10 +53,20 @@ Adding a `--due` also sets an alarm at that time.
 
 Dates accept ISO8601, `"YYYY-MM-DD HH:mm"`, or `"YYYY-MM-DD"`.
 
-## Default lists
+## Where items go
 
-- **"Life Hub 🎯"** — default for personal reminders
-- **"Work 🏢"** — all work-related items
+**"Life Hub 🎯"** is the single bin, for personal and work alike. There is no
+"Work 🏢" list on mini — verified 2026-09-12, `pim lists` returns 10 lists and
+none is Work. Do not create one.
+
+Work items take a context prefix in the title, matching existing entries:
+`"HMS: …"`, `"Living IT: …"`.
+
+The Work Smart List filters on the `#work` tag, which **cannot be set from any
+scripting API**. An item written here will not appear in that list until Tim tags
+it in the app. Say so plainly rather than implying the tag was applied.
+
+Full rules: `~/dev/brain/projects/personal-assistant/README.md`.
 
 ## Tags are not scriptable
 
@@ -67,8 +77,8 @@ Verified 2026-09-12 against both APIs:
   modification date, completion date, remind me date, body, priority, id,
   allday due date, name, creation date, due date`
 
-No tool can work around this. Use the **"Work 🏢"** list instead of `#work`. Tim
-maintains tag-based Smart Lists manually in the app.
+No tool can work around this. Tim maintains tag-based Smart Lists manually in the
+app; see "Where items go" above for what to do instead.
 
 ## When something fails
 
