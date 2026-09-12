@@ -3,120 +3,87 @@ name: apple-reminders
 description: Manage Apple Reminders. Triggers on "my reminders", "remind me", "add reminder", "create reminder", "reminder list", "todo", "due date", "mark complete", "check off".
 ---
 
-# Apple Reminders Integration
+# Apple Reminders
 
-Fast CLI access via [reminders-cli](https://github.com/keith/reminders-cli).
+Access via `pim` (`~/dev/pim`, installed at `~/.local/bin/pim`). JSON in, JSON out.
 
-## Prerequisites
+`reminders-cli` and other EventKit CLIs do **not** work when invoked from Claude
+Code: the bundle declares no Reminders usage string, so TCC hard-denies with no
+prompt. `pim` falls back to its LaunchAgent, which holds the grant. See
+`~/dev/pim/README.md`.
 
-```bash
-brew install keith/formulae/reminders-cli
-```
-
-## Operations
-
-### List all reminder lists
+## Reading
 
 ```bash
-reminders show-lists
+pim lists                                    # reminder lists
+pim reminders                                # all incomplete, all lists
+pim reminders --list "Life Hub 🎯"
+pim reminders --overdue
+pim reminders --due-before "2026-09-15"      # due today or earlier, etc.
+pim reminders --search "faktura"             # matches title and notes
+pim reminders --completed                    # completed instead of incomplete
+pim reminders --all                          # both
+pim reminders --limit 20
 ```
 
-### Show reminders in a list
+Flags combine: `pim reminders --list "Life Hub 🎯" --search färg --overdue`.
+
+Dates in output are **local ISO8601 with offset** (`2026-09-13T09:00:00+02:00`).
+No UTC conversion needed — filter with `--due-before`/`--overdue` rather than
+post-processing.
+
+Due today or overdue:
 
 ```bash
-reminders show "LIST_NAME" --format json
+pim reminders --due-before "$(date -v+1d +%Y-%m-%d)"
 ```
 
-### Show all reminders
+## Writing
 
 ```bash
-reminders show-all --format json
+pim add --list "Life Hub 🎯" --title "Ring tandläkaren" --due "2026-09-15 09:00" --notes "..."
+pim edit   <id> --title "..." --due "..." --notes "..." --list "..." [--clear-due]
+pim complete <id>
+pim uncomplete <id>
+pim delete <id>
 ```
 
-### Show reminders due today
+`<id>` is the `id` field from any read. It is stable — never use list positions.
+Adding a `--due` also sets an alarm at that time.
 
-**Important:** `dueDate` is stored in UTC. Tim is in Europe/Stockholm (CET/CEST). A reminder due "Feb 26" locally is stored as `2026-02-25T23:00:00Z` in winter (UTC+1) or `2026-02-25T22:00:00Z` in summer (UTC+2). Always convert local day boundaries to UTC when filtering by date.
-
-```bash
-# python3 reliably converts local day boundaries to UTC (macOS date -j is unreliable for this)
-TODAY_START=$(python3 -c "from datetime import datetime,timezone,timedelta;import zoneinfo;tz=zoneinfo.ZoneInfo('Europe/Stockholm');n=datetime.now(tz);print(n.replace(hour=0,minute=0,second=0,microsecond=0).astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-TODAY_END=$(python3 -c "from datetime import datetime,timezone,timedelta;import zoneinfo;tz=zoneinfo.ZoneInfo('Europe/Stockholm');n=datetime.now(tz);print((n+timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0).astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-reminders show-all --format json | jq --arg start "$TODAY_START" --arg end "$TODAY_END" \
-  '[.[] | select(.dueDate) | select(.dueDate >= $start and .dueDate < $end)]'
-```
-
-### Show overdue reminders
-
-```bash
-NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-reminders show-all --format json | jq --arg now "$NOW" '[.[] | select(.dueDate) | select(.dueDate < $now)]'
-```
-
-### Show reminders due today or overdue
-
-```bash
-TODAY_END=$(python3 -c "from datetime import datetime,timezone,timedelta;import zoneinfo;tz=zoneinfo.ZoneInfo('Europe/Stockholm');n=datetime.now(tz);print((n+timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0).astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-reminders show-all --format json | jq --arg end "$TODAY_END" \
-  '[.[] | select(.dueDate) | select(.dueDate < $end)]'
-```
-
-### Search reminders by name
-
-```bash
-reminders show-all --format json | jq '[.[] | select(.title | test("QUERY"; "i"))]'
-```
-
-### Add reminder (basic)
-
-```bash
-reminders add "LIST_NAME" "TITLE"
-```
-
-### Add reminder with due date and notes
-
-```bash
-reminders add "LIST_NAME" "TITLE" --due-date "tomorrow 9am" --notes "NOTES" --format json
-```
-
-### Complete reminder
-
-```bash
-reminders complete "LIST_NAME" INDEX
-```
-
-### Delete reminder
-
-```bash
-reminders delete "LIST_NAME" INDEX
-```
-
-### Edit reminder title
-
-```bash
-reminders edit "LIST_NAME" INDEX "NEW_TITLE"
-```
+Dates accept ISO8601, `"YYYY-MM-DD HH:mm"`, or `"YYYY-MM-DD"`.
 
 ## Default lists
 
 - **"Life Hub 🎯"** — default for personal reminders
-- **"Work 🏢"** — use for all work-related reminders (replaces `#work` tag, see Limitations)
+- **"Work 🏢"** — all work-related items
 
-## Tags Limitation
+## Tags are not scriptable
 
-Apple Reminders tags (`#work`, etc.) are **NOT accessible** via any scripting API:
-- JXA: no `tags` property on Reminder objects
-- EventKit: no tags API exposed
-- reminders-cli: no tag support
+Verified 2026-09-12 against both APIs:
 
-**Workaround:** Use the **"Work 🏢"** list for work-related items instead of tagging. Tim manages Smart Lists by tag manually in the Reminders app.
+- EventKit: no tag property on `EKReminder` or `EKCalendarItem`
+- AppleScript: a reminder's full property list is `completed, flagged, container,
+  modification date, completion date, remind me date, body, priority, id,
+  allday due date, name, creation date, due date`
+
+No tool can work around this. Use the **"Work 🏢"** list instead of `#work`. Tim
+maintains tag-based Smart Lists manually in the app.
+
+## When something fails
+
+Run `pim status` first. It reports authorization per domain and never prompts:
+
+```json
+{ "calendar": "writeOnly", "reminders": "authorized", "responsibleHint": "direct" }
+```
+
+Report that output verbatim. Do not switch to AppleScript or Computer Use as a
+workaround — JXA reads of Reminders take 88-150s on this data set and will look
+like a hang.
 
 ## Notes
 
-- **Timezone:** `dueDate` is UTC. Tim is in `Europe/Stockholm`. Always convert local dates to UTC for filtering.
-- INDEX is 0-based, shown in `reminders show` output
-- `--due-date` accepts natural language: "tomorrow", "next monday 3pm", "2025-06-15"
-- `--priority` values: none (default), low, medium, high
-- JSON output includes: externalId, isCompleted, list, priority, title, dueDate, startDate
-- dueDate only present if reminder has due date set
-- Delete is permanent (no trash)
-- To delete completed reminders: `uncomplete` first, then `delete`
+- Delete is permanent, no trash.
+- To delete a completed reminder, `uncomplete` first.
+- `--priority` takes an integer (0 = none).

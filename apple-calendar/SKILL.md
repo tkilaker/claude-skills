@@ -3,140 +3,75 @@ name: apple-calendar
 description: Manage Apple Calendar events. Triggers on "my calendar", "schedule", "add event", "create event", "meeting", "appointment", "calendar event", "what's on my calendar", "free time".
 ---
 
-# Apple Calendar Integration
+# Apple Calendar
 
-Hybrid approach: `icalbuddy` for fast reads, JXA for writes.
+Access via `pim` (`~/dev/pim`, installed at `~/.local/bin/pim`). JSON in, JSON out.
 
-## Read Operations (icalbuddy)
+`icalbuddy` and other EventKit CLIs do **not** work when invoked from Claude
+Code: the bundle declares no Calendars usage string, so TCC hard-denies with no
+prompt and `icalbuddy` reports "No calendars" or nothing at all. `pim` falls back
+to its LaunchAgent, which holds the grant. See `~/dev/pim/README.md`.
 
-### List events today
+Event routing per account is in `~/dev/brain/projects/calendar/README.md`. Read it
+before creating anything. Busy-time mirroring is owned by `calsync` — never copy
+events between calendars by hand.
 
-```bash
-icalbuddy eventsToday
-```
-
-### List events tomorrow
-
-```bash
-icalbuddy eventsToday+1
-```
-
-### List events for specific date
+## Reading
 
 ```bash
-icalbuddy eventsFrom:"2026-01-15" to:"2026-01-15"
+pim calendars                                              # all calendars
+pim events                                                 # today
+pim events --from 2026-09-15 --to 2026-09-22               # range
+pim events --from 2026-09-15 --to 2026-09-17 --cal Personlig
+pim events --from 2026-09-15 --to 2026-10-15 --search rep  # title, notes, location
+pim events --limit 20
 ```
 
-### List events for date range
+`--to` defaults to one day after `--from`. Recurring events are expanded within
+the range, and each carries `"recurring": true`.
+
+Next 48 hours:
 
 ```bash
-icalbuddy eventsFrom:"2026-01-01" to:"2026-01-31"
+pim events --from "$(date +%Y-%m-%d)" --to "$(date -v+2d +%Y-%m-%d)"
 ```
 
-### List events from specific calendar
+Output times are local ISO8601 with offset (`2026-09-12T10:00:00+02:00`).
+
+## Writing
 
 ```bash
-icalbuddy -ic "Work" eventsToday
+pim event-add --cal Personlig --title "Möte" \
+  --start "2026-09-15 14:00" --end "2026-09-15 15:00" \
+  --location "Malmö" --notes "..."
+
+pim event-add --cal Personlig --title "Semester" --start 2026-09-20 --allday
+
+pim event-edit <id> --title "..." --start "..." --end "..." --location "..." --notes "..."
+pim event-delete <id>
 ```
 
-### Search events by title
+`<id>` is the `id` field from any read. `--end` defaults to one hour after
+`--start`. Delete is permanent.
+
+**Language:** check existing entries in the target calendar first and write new
+events in the same language Tim uses there.
+
+## When something fails
+
+Run `pim status` first. It reports authorization per domain and never prompts:
+
+```json
+{ "calendar": "writeOnly", "reminders": "authorized", "responsibleHint": "direct" }
+```
+
+`"calendar": "writeOnly"` on the direct path is expected — reads route through the
+agent. Report the output verbatim rather than switching mechanism. Do not fall
+back to JXA: a date-range `whose` query across these calendars exceeds 110s and
+will look like a hang.
+
+Force a sync from the calendar servers:
 
 ```bash
-icalbuddy eventsToday+30 | grep -i "QUERY"
+osascript -l JavaScript -e 'Application("Calendar").reloadCalendars()'
 ```
-
-### List upcoming events (next 7 days)
-
-```bash
-icalbuddy eventsToday+7
-```
-
-### List all calendars
-
-```bash
-icalbuddy calendars
-```
-
-## Write Operations (JXA)
-
-### Create event
-
-```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-const cal = app.calendars.byName("CALENDAR_NAME");
-const start = new Date("2024-12-15T14:00:00");
-const end = new Date("2024-12-15T15:00:00");
-const event = app.Event({
-    summary: "TITLE",
-    startDate: start,
-    endDate: end,
-    location: "LOCATION",
-    description: "NOTES"
-});
-cal.events.push(event);
-'
-```
-
-### Create all-day event
-
-```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-const cal = app.calendars.byName("CALENDAR_NAME");
-const start = new Date("2024-12-25");
-start.setHours(0,0,0,0);
-const end = new Date("2024-12-25");
-end.setHours(23,59,59,999);
-const event = app.Event({
-    summary: "TITLE",
-    startDate: start,
-    endDate: end,
-    alldayEvent: true
-});
-cal.events.push(event);
-'
-```
-
-### Update event
-
-```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-const cal = app.calendars.byName("CALENDAR_NAME");
-const events = cal.events.whose({summary: "TITLE"})();
-if (events.length > 0) {
-    events[0].startDate = new Date("2024-12-16T14:00:00");
-    events[0].endDate = new Date("2024-12-16T15:00:00");
-}
-'
-```
-
-### Delete event
-
-```bash
-osascript -l JavaScript -e '
-const app = Application("Calendar");
-const cal = app.calendars.byName("CALENDAR_NAME");
-const events = cal.events.whose({summary: "TITLE"})();
-if (events.length > 0) app.delete(events[0]);
-'
-```
-
-### Reload calendars (sync)
-
-```bash
-osascript -l JavaScript -e '
-Application("Calendar").reloadCalendars();
-'
-```
-
-## Important Notes
-
-- **Reads**: Use `icalbuddy` - reads calendar DB directly, fast
-- **Writes**: Use JXA - slower but necessary for create/update/delete
-- `icalbuddy` requires: `brew install ical-buddy`
-- Use `-ic "Name"` to include specific calendar, `-ec "Name"` to exclude
-- JXA `whose` queries are slow on large calendars (avoid for reads)
-- Delete is permanent
-- **Language**: Before creating/updating events, check existing entries to detect the user's language. Write new events in the same language.

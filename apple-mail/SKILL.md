@@ -11,6 +11,25 @@ Use the absolute-path launcher. It resolves the bundled JXA helper, so it works 
 /Users/tim/dev/claude-skills/apple-mail/scripts/mail '<JSON request>'
 ```
 
+
+## Never search message content
+
+`whose content contains` is prohibited. Measured 2026-09-12 against a
+16,920-message mailbox:
+
+| Query | Time |
+|---|---|
+| `count messages` | 0.3s |
+| `whose subject contains` | 13.4s |
+| `whose content contains` | **>90s, timed out** |
+
+Worse, it leaves Mail.app wedged: after the timeout a `count messages of inbox`
+that had taken 0.3s kept timing out at 20s for over five minutes, and Mail sat at
+35-45% CPU until it was force quit.
+
+Search **subject and sender only**. If a content search is genuinely required,
+say so and stop rather than running one.
+
 ## Operating model
 
 - Read actions are immediate.
