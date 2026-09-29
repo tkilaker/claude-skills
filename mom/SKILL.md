@@ -5,7 +5,7 @@ description: Generate standardized Minutes of Meeting (MOM) from raw meeting tra
 
 # Minutes of Meeting Generator
 
-Generate a standardized MOM `.txt` file from a raw meeting transcription and optional context.
+Generate a standardized MOM Markdown (`.md`) file from a raw meeting transcription and optional context.
 
 ## Input
 
@@ -25,61 +25,53 @@ If the user does not specify attendees or context, extract what you can from the
 2. Read the full transcription. For large files, inspect metadata first and read in chunks with shell tools.
 3. Extract attendees, topics discussed, decisions, action items, and key quotes.
 4. Organize into the standard format below.
-5. Save using the current project's established meeting-document convention when one is discoverable. Otherwise write the result to `~/Downloads/Meeting Summary YYYY-MM-DD.txt`.
+5. Save using the current project's established meeting-document convention when one is discoverable. Otherwise write the result to `~/Downloads/Meeting Summary YYYY-MM-DD.md`.
 6. Copy the output file path to the clipboard with `pbcopy` when available. If clipboard copy fails, report the path.
 
 ## Output Format
 
-The output must always follow this exact structure. Omit sections with no content entirely. Use plain text, no Markdown formatting.
+The output must always follow this exact structure. Omit sections with no content entirely. Use Markdown.
 
-```text
-MEETING SUMMARY
-[Project/Company] - [Other party]
-YYYY-MM-DD, HH:MM
-[Location or "Remote"]
+```markdown
+# Meeting summary: [Project/Company] - [Other party]
 
-Attendees:  [Name] ([Role], [Org])
-            [Name] ([Role], [Org])
+YYYY-MM-DD, HH:MM · [Location or "Remote"]
 
-Absent:     [Name] ([Role], [Org]) - [reason if known]
+**Attendees:** [Name] ([Role], [Org]), [Name] ([Role], [Org])
+**Absent:** [Name] ([Role], [Org]) - [reason if known]
 
+## 1. [Topic heading]
 
-1. [TOPIC HEADING IN CAPS]
-
-[Prose paragraphs and/or indented bullet points. Mix as appropriate.
+[Prose paragraphs and/or bullet points. Mix as appropriate.
 Keep it factual. Use direct quotes sparingly - only when the exact
 wording matters.]
 
-  - Bullet point
-  - Another point
+- Bullet point
+- Another point
 
-
-2. [NEXT TOPIC]
+## 2. [Next topic]
 
 [Continue same pattern...]
 
+## N. Next steps
 
-N. NEXT STEPS
-
-1. [Action item with owner if known]
-2. [Next action item]
-
+1. [Owner]: [action item]
+2. [Owner]: [next action item]
 
 [Any standing notes like NDA status, follow-up meetings, etc.]
 ```
 
 ## Rules
 
-- Plain `.txt`, no Markdown, no HTML.
+- Markdown `.md`: `#` title, `##` numbered sections, `-` and `1.` lists, `**` for header labels. No HTML, no tables.
 - Section numbering is sequential: `1`, `2`, `3`, etc.
-- Topic headings are ALL CAPS.
-- Attendees block is aligned with spaces, not tabs.
+- Topic headings in sentence case.
 - Prose style is factual, third person, past tense.
 - No filler and no "the meeting began with" preamble.
 - Include specific numbers, dates, amounts, and names mentioned.
-- The last numbered section is always `NEXT STEPS`, or `DECISIONS AND NEXT STEPS` if there are few decisions.
+- The last numbered section is always `Next steps`, or `Decisions and next steps` if there are few decisions. One list item per action, owner first when known.
 - If the transcription is in Swedish, output in English. Meeting language does not dictate output language.
-- Soft-wrap lines around 70 characters for readability.
+- Don't hard-wrap lines; one paragraph per line.
 - Use UTF-8 encoding.
 
 ## Context and Quality Rules
