@@ -33,14 +33,14 @@ If the user does not specify attendees or context, extract what you can from the
 The output must always follow this exact structure. Omit sections with no content entirely. Use Markdown.
 
 ```markdown
-# Meeting summary: [Project/Company] - [Other party]
+# MEETING SUMMARY: [PROJECT/COMPANY] - [OTHER PARTY]
 
 YYYY-MM-DD, HH:MM · [Location or "Remote"]
 
 **Attendees:** [Name] ([Role], [Org]), [Name] ([Role], [Org])
 **Absent:** [Name] ([Role], [Org]) - [reason if known]
 
-## 1. [Topic heading]
+## 1. [TOPIC HEADING]
 
 [Prose paragraphs and/or bullet points. Mix as appropriate.
 Keep it factual. Use direct quotes sparingly - only when the exact
@@ -49,11 +49,11 @@ wording matters.]
 - Bullet point
 - Another point
 
-## 2. [Next topic]
+## 2. [NEXT TOPIC]
 
 [Continue same pattern...]
 
-## N. Next steps
+## N. NEXT STEPS
 
 1. [Owner]: [action item]
 2. [Owner]: [next action item]
@@ -65,11 +65,11 @@ wording matters.]
 
 - Markdown `.md`: `#` title, `##` numbered sections, `-` and `1.` lists, `**` for header labels. No HTML, no tables.
 - Section numbering is sequential: `1`, `2`, `3`, etc.
-- Topic headings in sentence case.
+- Headings (`#` and `##`) in uppercase, as in the template.
 - Prose style is factual, third person, past tense.
 - No filler and no "the meeting began with" preamble.
 - Include specific numbers, dates, amounts, and names mentioned.
-- The last numbered section is always `Next steps`, or `Decisions and next steps` if there are few decisions. One list item per action, owner first when known.
+- The last numbered section is always `NEXT STEPS`, or `DECISIONS AND NEXT STEPS` if there are few decisions. One list item per action, owner first when known.
 - If the transcription is in Swedish, output in English. Meeting language does not dictate output language.
 - Don't hard-wrap lines; one paragraph per line.
 - Use UTF-8 encoding.
