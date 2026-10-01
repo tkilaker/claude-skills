@@ -59,6 +59,10 @@ wording matters.]
 2. [Owner]: [next action item]
 
 [Any standing notes like NDA status, follow-up meetings, etc.]
+
+**Before sharing:** [points that are sensitive if the summary leaves the team, e.g. internal politics, named individuals' resistance, context-only facts. Omit when none.]
+
+**Sources:** [context files used, e.g. `README.md`, `docs/meetings/MOM-2026-09-18-kickoff.md`; "transcript only" when none]
 ```
 
 ## Rules
@@ -73,6 +77,16 @@ wording matters.]
 - If the transcription is in Swedish, output in English. Meeting language does not dictate output language.
 - Don't hard-wrap lines; one paragraph per line.
 - Use UTF-8 encoding.
+
+## Provenance and Certainty
+
+Context makes the summary strong: use it freely to spell names, explain background, connect to earlier decisions and flag conflicts with them. But the transcript decides what happened in this meeting.
+
+- Facts from context that nobody said in the meeting are marked inline with their source, e.g. `(briefing 2026-09-29)`, or go in a `CONTEXT` section. Spelling fixes need no marker.
+- Keep the speaker's verb: proposed, suggested, estimated, agreed, decided. Only call something agreed or decided when it was.
+- Next steps are only actions said or clearly committed to in the meeting. Follow-ups known from context go in the standing notes, marked.
+- Uncertain hearing (names, numbers, companies) gets `(as heard)` instead of a guess.
+- Do not resolve ambiguous figures by interpretation; state what was said.
 
 ## Context and Quality Rules
 
