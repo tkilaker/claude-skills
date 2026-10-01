@@ -1,0 +1,60 @@
+/* Ekman Intelligence brief: one A4 page, Ekman visual identity (blue dominates, accents sparing). */
+@font-face { font-family: Inter; src: url(inter-latin-var.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Prata; src: url(prata-latin-400.woff2) format('woff2'); }
+@page { size: A4; margin: 12mm 16mm 10mm; }
+
+:root {
+  --blue: #0069a3; --yellow: #f2be00; --green: #479d5d; --grey: #9eb0ba;
+  --fg: #1d2530; --muted: #5d6874; --line: #dfe4ea; --wash: #f1f5f8;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 9.5pt/1.45 Inter, sans-serif; font-feature-settings: 'cv11', 'ss01'; color: var(--fg); }
+p { margin: 0 0 7px; max-width: 160mm; }
+b, strong { font-weight: 600; }
+
+/* Header: fixed for every brief. Filled by render.sh. */
+header { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--blue); padding-bottom: 9px; margin-bottom: 14px; }
+header img { width: 28px; height: 28px; }
+header .n { font-weight: 600; font-size: 10.5pt; letter-spacing: -.01em; }
+header .s { color: var(--muted); font-size: 8.5pt; }
+header .d { margin-left: auto; color: var(--muted); font-size: 8.5pt; text-align: right; }
+header .kind { color: var(--blue); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 7.5pt; }
+
+h1 { font: 400 21pt/1.15 Prata, serif; margin: 0 0 8px; }
+.lead { font-size: 11.5pt; margin: 0 0 12px; max-width: 150mm; }
+h2 { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .08em; color: var(--blue); margin: 15px 0 6px; font-weight: 600; }
+
+/* What the reader needs to do. Always present: "Inget, för kännedom" is an answer. */
+.ask { border-left: 3px solid var(--blue); background: var(--wash); padding: 7px 12px; margin: 0 0 12px; font-size: 9.5pt; }
+.ask b { color: var(--blue); }
+
+/* Headline numbers. .cost marks the price of the change: neutral ink, never the brand blue. */
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 4px 0 4px; }
+.kpi { background: var(--wash); border-radius: 6px; padding: 9px 12px; }
+.kpi .v { font-size: 17pt; font-weight: 600; color: var(--blue); letter-spacing: -.02em; line-height: 1.1; }
+.kpi.cost .v { color: var(--fg); }
+.kpi .l { font-size: 8.5pt; color: var(--muted); margin-top: 4px; }
+
+/* Before/after bars. Widths are percent of the largest value in the chart. */
+.pair { display: grid; grid-template-columns: 46mm 1fr; gap: 3px 10px; align-items: center; margin: 6px 0; font-size: 9pt; }
+.pair .lbl { grid-row: span 2; }
+.bar { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; font-size: 8.5pt; }
+.bar span { display: block; height: 11px; border-radius: 2px; }
+.bar.before span { background: var(--grey); } .bar.before { color: var(--muted); }
+.bar.after span { background: var(--blue); } .bar.after { color: var(--blue); font-weight: 600; }
+.legend { font-size: 8.5pt; color: var(--muted); display: flex; gap: 16px; margin: 4px 0 0 56mm; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.legend .b { background: var(--grey); } .legend .a { background: var(--blue); }
+
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 4px 0; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: 8.5pt; border-bottom: 1px solid var(--fg); padding: 4px 8px; }
+td { padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.after { color: var(--blue); font-weight: 600; }
+tr.total td { font-weight: 600; border-bottom: none; }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.note { font-size: 8.5pt; color: var(--muted); margin-top: 5px; }
+.avoid { break-inside: avoid; }
+
+footer { margin-top: 14px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 8.5pt; color: var(--muted); }

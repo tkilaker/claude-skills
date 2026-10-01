@@ -1,0 +1,54 @@
+<h1>Appen har fått en större server</h1>
+<p class="lead">Prod bytte server den 30 september, dev och staging den 1 oktober. Sidorna laddar nästan dubbelt så snabbt och de långsammaste från närmare 8 sekunder till drygt 2.</p>
+<div class="ask"><b>Från dig:</b> inget, det här är för kännedom. Ökningen ligger inom utvecklingsteamets mandat.</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">1,6×</div><div class="l">snabbare för en vanlig sida<br>(731 → 447 ms)</div></div>
+  <div class="kpi"><div class="v">3,4×</div><div class="l">snabbare för de långsammaste<br>(7,6 → 2,3 s)</div></div>
+  <div class="kpi cost"><div class="v">+3 300 kr</div><div class="l">per månad för alla tre miljöer<br>(ca 1 100 kr per miljö)</div></div>
+</div>
+
+<h2>Varför</h2>
+<p>Appen körde på Azures minsta plan, B1: en processorkärna och 1,75 GB minne, avsedd för test. Den 30 september räckte två personer i Spec Bench för att driva processorn till 100 %. Sidor tog 12-14 sekunder att ladda och appen startade om av sig själv. Databasen var ledig hela tiden, så det var servern som inte räckte till. Nu kör vi P1v3, en plan byggd för produktion: två kärnor och 8 GB minne.</p>
+
+<div class="avoid">
+<h2>Prod, före och efter</h2>
+<div class="pair"><div class="lbl">Väntetid, vanlig sida</div>
+  <div class="bar before"><span style="width:8.2%"></span>731 ms</div>
+  <div class="bar after"><span style="width:5%"></span>447 ms</div></div>
+<div class="pair"><div class="lbl">Väntetid, långsammaste 5 %</div>
+  <div class="bar before"><span style="width:85%"></span>7 615 ms</div>
+  <div class="bar after"><span style="width:25.2%"></span>2 261 ms</div></div>
+<div class="legend"><span><i class="b"></i>Före (B1)</span><span><i class="a"></i>Efter (P1v3)</span></div>
+
+<table style="margin-top:10px">
+  <tr><th></th><th>Före: B1, 23-30 sep</th><th>Efter: P1v3, 30 sep-1 okt</th></tr>
+  <tr><td>Processor, medel / topp</td><td>27-70 % / slår i 100 %</td><td class="after">3-5 % / högst 23 %</td></tr>
+  <tr><td>Minne</td><td>80-86 %, toppar på 93 %</td><td class="after">35-40 %</td></tr>
+  <tr><td>Servertid, vanlig / långsammaste 5 %</td><td>85 / 3 152 ms</td><td class="after">23 / 1 122 ms</td></tr>
+  <tr><td>Längsta anrop</td><td>197 s</td><td class="after">21 s</td></tr>
+  <tr><td>Omstarter av sig själv</td><td>ja, 30 sep 09:25</td><td class="after">inga</td></tr>
+</table>
+</div>
+
+<div class="two avoid">
+  <div>
+    <h2>Kostnad per månad</h2>
+    <table>
+      <tr><th>Miljö</th><th class="num">Före</th><th class="num">Efter, ca</th></tr>
+      <tr><td>Prod</td><td class="num">1 290 kr</td><td class="num"><b>2 500 kr</b></td></tr>
+      <tr><td>Dev</td><td class="num">1 860 kr</td><td class="num"><b>3 000 kr</b></td></tr>
+      <tr><td>Staging</td><td class="num">740 kr</td><td class="num"><b>1 850 kr</b></td></tr>
+      <tr class="total"><td>Totalt</td><td class="num">3 890 kr</td><td class="num"><b>7 350 kr</b></td></tr>
+    </table>
+    <p class="note">Före är faktisk kostnad i september, efter är listpris. Budgetlarmen är höjda och slår till om en månad drar iväg.</p>
+  </div>
+  <div>
+    <h2>Varför även dev och staging</h2>
+    <p>Staging har riktiga användare. Dev är där Oliwer och jag jobbar varje dag, och samma flaskhals gjorde allt långsammare för oss.</p>
+    <h2>Nästa steg</h2>
+    <p>Collection, Transactions och enstaka leverantörsfakturor är fortfarande långsamma (3-5 s för de långsammaste). Där väntar appen på data, inte på servern, så det löser vi i koden.</p>
+  </div>
+</div>
+
+<footer>Mätt i prod med appens egen prestandaloggning. Efter-perioden är det första dygnet på P1v3. Vi följer upp med en hel vecka.</footer>

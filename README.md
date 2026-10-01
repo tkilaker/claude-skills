@@ -43,6 +43,10 @@ Validate and safely queue authorized media torrents in NAS watch folders.
 
 Rewrite drafts or notes into Tim's written voice for any channel (mail, Slack/Teams, PR/commit, doc, client proposal), in Swedish or English. Per-channel structure templates, steerable dials, no AI markers.
 
+#### [ekman-brief](./ekman-brief/SKILL.md)
+
+One-page A4 PDF brief to Axel in Ekman Intelligence style: fixed header, Ekman fonts and colours, an ask box, headline numbers, before/after bars. `render.sh` wraps a body fragment and prints it with headless Chrome.
+
 ### Code Review
 
 #### [commit-review](./commit-review/SKILL.md)
