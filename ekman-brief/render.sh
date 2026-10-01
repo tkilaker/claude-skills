@@ -3,7 +3,8 @@
 #
 #   render.sh <body.html> <out.pdf> [--to Axel] [--kind Uppdatering] [--date "1 oktober 2026"]
 #
-# Writes <out>.png next to the PDF for a visual check, and fails if the PDF runs past one page.
+# Keeps the assembled page and one preview PNG per page in build/ next to the body, so <out> gets only the PDF.
+# Fails if the PDF runs past one page.
 set -euo pipefail
 
 DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -23,8 +24,8 @@ while [ $# -gt 0 ]; do
 done
 
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-WORK=$(mktemp -d)
-trap 'rm -rf "$WORK"' EXIT
+WORK="$(cd "$(dirname "$BODY")" && pwd)/build"
+rm -rf "$WORK" && mkdir -p "$WORK"
 cp "$DIR"/assets/* "$DIR/brief.css" "$WORK/"
 TITLE=$(sed -n 's:.*<h1[^>]*>\(.*\)</h1>.*:\1:p' "$BODY" | head -1)
 
@@ -35,12 +36,13 @@ TITLE=$(sed -n 's:.*<h1[^>]*>\(.*\)</h1>.*:\1:p' "$BODY" | head -1)
 <header><img src="ekman-mark.png" alt=""><div><div class="n">Ekman Intelligence</div><div class="s">Ekman &amp; Co</div></div>
 <div class="d"><div class="kind">$KIND</div>Till $TO, från Tim<br>$DATE</div></header>
 EOF
-  cat "$BODY"
+  # A number never wraps away from its unit or its thousands group: "93 %", "1 100 kr", "3 152 ms".
+  perl -CSD -pe 's/(?<=\d) (?=\d{3}\b|%|ms\b|s\b|kr\b|GB\b|h\b)/&nbsp;/g' "$BODY"
   echo '</body></html>'
 } > "$WORK/index.html"
 
 "$CHROME" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="$OUT" "file://$WORK/index.html" 2>/dev/null
 PAGES=$(pdfinfo "$OUT" | awk '/^Pages:/ {print $2}')
-pdftoppm -png -r 110 -singlefile "$OUT" "${OUT%.pdf}"
-echo "$OUT ($PAGES page$([ "$PAGES" = 1 ] || echo s)), preview ${OUT%.pdf}.png"
+pdftoppm -png -r 110 "$OUT" "$WORK/page"
+echo "$OUT ($PAGES page$([ "$PAGES" = 1 ] || echo s)), preview: $(ls "$WORK"/page-*.png | tr '\n' ' ')"
 [ "$PAGES" = 1 ] || { echo "runs past one page: cut copy before shrinking type" >&2; exit 1; }
